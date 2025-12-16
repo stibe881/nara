@@ -1,0 +1,29 @@
+# EAS Build ignore file
+# This ensures .expo is not uploaded to EAS Build
+
+# Expo cache
+.expo/
+.expo-shared/
+
+# Build artifacts
+dist/
+web-build/
+
+# Native directories (EAS generates these)
+ios/
+android/
+
+# Metro cache
+.metro-health-check*
+
+# Debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Git
+.git/
+
+# IDE
+.idea/
+.vscode/
