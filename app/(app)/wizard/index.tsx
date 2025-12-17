@@ -6,6 +6,7 @@ import {
     TouchableOpacity,
     FlatList,
     ActivityIndicator,
+    Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -62,9 +63,13 @@ export default function WizardChildrenScreen() {
                     {isSelected && <Ionicons name="checkmark" size={18} color="#FFFFFF" />}
                 </View>
                 <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>
-                        {item.gender === 'Junge' ? '👦' : item.gender === 'Maedchen' ? '👧' : '🧒'}
-                    </Text>
+                    {item.photo_url ? (
+                        <Image source={{ uri: item.photo_url }} style={styles.avatarImage} />
+                    ) : (
+                        <Text style={styles.avatarText}>
+                            {item.gender === 'Junge' ? '👦' : item.gender === 'Maedchen' ? '👧' : '🧒'}
+                        </Text>
+                    )}
                 </View>
                 <View style={styles.childInfo}>
                     <Text style={styles.childName}>{item.name}</Text>
@@ -222,6 +227,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
+        overflow: 'hidden',
+    },
+    avatarImage: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
     },
     avatarText: {
         fontSize: 22,

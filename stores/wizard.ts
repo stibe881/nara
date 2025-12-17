@@ -34,6 +34,9 @@ interface WizardState {
     // Step 6b: Images toggle
     generateImages: boolean;
 
+    // Pending request ID (for showing banner on home screen)
+    newPendingRequestId: string | null;
+
     // Actions
     setStoryMode: (mode: 'single' | 'series') => void;
     setSeriesConfig: (config: SeriesConfig | null) => void;
@@ -46,6 +49,7 @@ interface WizardState {
     setMoral: (id: string | null) => void;
     setLength: (length: StoryLength) => void;
     setGenerateImages: (value: boolean) => void;
+    setNewPendingRequestId: (id: string | null) => void;
     reset: () => void;
 }
 
@@ -60,6 +64,7 @@ const initialState = {
     selectedMoralId: null,
     length: 'normal' as StoryLength,
     generateImages: true,
+    newPendingRequestId: null as string | null,
 };
 
 export const useWizardStore = create<WizardState>((set) => ({
@@ -103,6 +108,10 @@ export const useWizardStore = create<WizardState>((set) => ({
 
     setGenerateImages: (value) => set({ generateImages: value }),
 
-    reset: () => set(initialState),
+    setNewPendingRequestId: (id) => set({ newPendingRequestId: id }),
+
+    // Note: reset() preserves newPendingRequestId so home screen can still read it
+    reset: () => set((state) => ({ ...initialState, newPendingRequestId: state.newPendingRequestId })),
 }));
+
 

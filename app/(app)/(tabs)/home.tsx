@@ -10,18 +10,40 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import useI18n from '@/hooks/useI18n';
 import * as Notifications from 'expo-notifications';
 import CoinBalance from '@/components/CoinBalance';
+import { useWizardStore } from '@/stores/wizard';
 
 export default function HomeScreen() {
     const router = useRouter();
     const { user } = useAuth();
     const { t } = useI18n();
+    const { newPendingRequestId, setNewPendingRequestId } = useWizardStore();
     const [children, setChildren] = useState<Child[]>([]);
     const [recentStories, setRecentStories] = useState<Story[]>([]);
     const [recentSeries, setRecentSeries] = useState<(Series & { episode_count: number })[]>([]);
     const [recentViewMode, setRecentViewMode] = useState<'stories' | 'series'>('stories');
-    const [pendingRequest, setPendingRequest] = useState<any>(null);
+    const [pendingRequests, setPendingRequests] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const birthdayCheckedRef = useRef(false);
+    const processedRequestIdRef = useRef<string | null>(null);
+
+    // Handle newPendingRequestId from wizard store
+    useEffect(() => {
+        if (newPendingRequestId && newPendingRequestId !== processedRequestIdRef.current) {
+            console.log('New request ID from store:', newPendingRequestId);
+            processedRequestIdRef.current = newPendingRequestId;
+            // Immediately add a minimal pending request to show the banner
+            setPendingRequests(prev => [
+                { id: newPendingRequestId, status: 'queued', is_episode: false },
+                ...prev.filter(r => r.id !== newPendingRequestId)
+            ]);
+            // Clear the store so we don't process it again
+            setNewPendingRequestId(null);
+            // Also start polling for updates
+            loadPendingRequests();
+        }
+    }, [newPendingRequestId]);
+
+
 
     // Check birthdays once per session
     useEffect(() => {
@@ -73,7 +95,16 @@ export default function HomeScreen() {
     // Reload data when screen gains focus (not just on mount)
     useFocusEffect(
         useCallback(() => {
+            console.log('Home screen focused, loading data...');
             loadData();
+        }, [user?.id])
+    );
+
+    // Load pending request immediately on focus (faster than waiting for full loadData)
+    useFocusEffect(
+        useCallback(() => {
+            console.log('Home screen focused, checking pending requests...');
+            loadPendingRequests();
         }, [user?.id])
     );
 
@@ -94,7 +125,7 @@ export default function HomeScreen() {
                 (payload) => {
                     console.log('Story request update:', payload);
                     // Reload pending request on any change
-                    loadPendingRequest();
+                    loadPendingRequests();
                 }
             )
             .subscribe();
@@ -144,35 +175,39 @@ export default function HomeScreen() {
             }
 
             // Load pending request separately
-            await loadPendingRequest();
+            await loadPendingRequests();
         } catch (error) {
             console.error('Error loading data:', error);
         }
         setIsLoading(false);
     };
 
-    // Separate function to load pending request - can be called independently
-    const loadPendingRequest = async () => {
+    // Separate function to load pending requests - can be called independently
+    const loadPendingRequests = async () => {
         try {
-            // Use maybeSingle() instead of single() to avoid throwing when no row exists
+            console.log('Loading pending requests for user:', user?.id);
+            // Valid story_status values: queued, generating_text, generating_images, rendering_clips, finished, failed
+            // Only show requests created in the last 10 minutes to avoid showing stuck old requests
+            const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
             const { data: pendingData, error } = await supabase
                 .from('story_requests')
                 .select('*')
                 .eq('user_id', user?.id)
-                .in('status', ['pending', 'queued', 'processing', 'generating_text', 'generating_images'])
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
+                .in('status', ['queued', 'generating_text', 'generating_images', 'rendering_clips'])
+                .gte('created_at', tenMinutesAgo)
+                .order('created_at', { ascending: false });
+
+            console.log('Pending requests result:', { pendingData, error });
 
             if (error) {
-                console.error('Error loading pending request:', error);
-                setPendingRequest(null);
+                console.error('Error loading pending requests:', error);
+                setPendingRequests([]);
             } else {
-                setPendingRequest(pendingData);
+                setPendingRequests(pendingData || []);
             }
         } catch (error) {
-            console.error('Error loading pending request:', error);
-            setPendingRequest(null);
+            console.error('Error loading pending requests:', error);
+            setPendingRequests([]);
         }
     };
 
@@ -208,27 +243,41 @@ export default function HomeScreen() {
                     <CoinBalance />
                 </View>
 
-                {/* Pending Generation Banner */}
-                {pendingRequest && (
+                {/* Pending Generation Banners */}
+                {pendingRequests.map((pendingRequest) => (
                     <TouchableOpacity
+                        key={pendingRequest.id}
                         style={styles.pendingBanner}
-                        onPress={() => router.push(`/(app)/generating/${pendingRequest.id}`)}
+                        onPress={() => {
+                            // For episodes, don't navigate (edge function runs synchronously)
+                            if (!pendingRequest.is_episode) {
+                                router.push(`/(app)/generating/${pendingRequest.id}`);
+                            }
+                        }}
+                        activeOpacity={pendingRequest.is_episode ? 1 : 0.7}
                     >
                         <View style={styles.pendingIcon}>
                             <ActivityIndicator size="small" color="#7C3AED" />
                         </View>
                         <View style={styles.pendingContent}>
-                            <Text style={styles.pendingTitle}>{t('home.storyCreating')}</Text>
+                            <Text style={styles.pendingTitle}>
+                                {pendingRequest.is_episode
+                                    ? `Folge ${pendingRequest.episode_number || ''} wird erstellt...`
+                                    : t('home.storyCreating')
+                                }
+                            </Text>
                             <Text style={styles.pendingStatus}>
-                                {(pendingRequest.status === 'pending' || pendingRequest.status === 'queued') && t('home.waitingStart')}
-                                {pendingRequest.status === 'processing' && t('home.processing')}
+                                {pendingRequest.status === 'queued' && t('home.waitingStart')}
                                 {pendingRequest.status === 'generating_text' && t('home.generatingText')}
                                 {pendingRequest.status === 'generating_images' && t('home.generatingImages')}
+                                {pendingRequest.status === 'rendering_clips' && t('home.renderingClips')}
                             </Text>
                         </View>
-                        <Ionicons name="chevron-forward" size={20} color="#A78BFA" />
+                        {!pendingRequest.is_episode && (
+                            <Ionicons name="chevron-forward" size={20} color="#A78BFA" />
+                        )}
                     </TouchableOpacity>
-                )}
+                ))}
 
                 {/* Main Action Card */}
                 <TouchableOpacity style={styles.mainCard} onPress={handleStartWizard}>

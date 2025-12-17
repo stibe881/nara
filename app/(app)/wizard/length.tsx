@@ -40,6 +40,7 @@ export default function WizardLengthScreen() {
         setLength,
         generateImages,
         setGenerateImages,
+        setNewPendingRequestId,
         reset,
     } = useWizardStore();
 
@@ -162,9 +163,29 @@ export default function WizardLengthScreen() {
                     );
                 }
 
-                // Reset wizard and navigate to generating screen
+                // Start story generation in background (don't await)
+                supabase.functions.invoke('create-story', {
+                    body: { request_id: request.id },
+                }).catch(err => {
+                    // Ignore timeout errors - function continues in background
+                    if (err?.name !== 'FunctionsFetchError') {
+                        console.error('Background generation error:', err);
+                    }
+                });
+
+                // Set pending request ID in store BEFORE reset (so home screen can pick it up)
+                setNewPendingRequestId(request.id);
+
+                // Reset wizard (but keep newPendingRequestId) and navigate to home
                 reset();
-                router.replace(`/(app)/generating/${request.id}`);
+                Alert.alert(
+                    '✨ Geschichte wird erstellt',
+                    'Du wirst benachrichtigt, sobald deine Geschichte fertig ist. Der Fortschritt wird auf der Startseite angezeigt.',
+                    [{
+                        text: 'OK',
+                        onPress: () => router.replace('/(app)/(tabs)/home')
+                    }]
+                );
             }
         } catch (error) {
             console.error('Error creating story:', error);

@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/auth';
 import { supabase } from '@/lib/supabase';
 import * as Notifications from 'expo-notifications';
+import * as Application from 'expo-application';
 import useI18n from '@/hooks/useI18n';
 import { shareInvite } from '@/lib/familyInvite';
 
@@ -294,7 +295,9 @@ export default function SettingsScreen() {
             </View>
 
             {/* Version */}
-            <Text style={styles.version}>{t('settings.version')} 1.0.0</Text>
+            <Text style={styles.version}>
+                {t('settings.version')} {Application.nativeApplicationVersion} (Build {Application.nativeBuildVersion})
+            </Text>
         </ScrollView>
     );
 }

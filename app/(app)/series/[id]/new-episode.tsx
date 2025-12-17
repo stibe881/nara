@@ -7,11 +7,13 @@ import {
     TouchableOpacity,
     ActivityIndicator,
     Switch,
+    Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/auth';
+import { useWizardStore } from '@/stores/wizard';
 import type { Series, Moral, StoryLength } from '@/types/supabase';
 
 const LENGTH_OPTIONS = [
@@ -24,6 +26,7 @@ export default function NewEpisodeScreen() {
     const router = useRouter();
     const { id: seriesId } = useLocalSearchParams<{ id: string }>();
     const { session } = useAuth();
+    const { setNewPendingRequestId } = useWizardStore();
     const [series, setSeries] = useState<Series | null>(null);
     const [morals, setMorals] = useState<Moral[]>([]);
     const [selectedMoralKey, setSelectedMoralKey] = useState<string>('none');
@@ -70,30 +73,58 @@ export default function NewEpisodeScreen() {
     };
 
     const handleGenerate = async () => {
-        if (!selectedMoralKey) return;
+        if (!selectedMoralKey || !session?.user?.id) return;
 
         setIsGenerating(true);
         try {
-            const { data, error } = await supabase.functions.invoke('generate-series-episode', {
+            // 1. Create a story_request entry first (for status tracking)
+            const { data: request, error: requestError } = await supabase
+                .from('story_requests')
+                .insert({
+                    user_id: session.user.id,
+                    status: 'queued',
+                    length: length,
+                    is_episode: true,
+                    series_id: seriesId,
+                    episode_number: episodeCount + 1,
+                })
+                .select()
+                .single();
+
+            if (requestError) throw requestError;
+
+            // 2. Set pending request ID in store for home screen banner
+            setNewPendingRequestId(request.id);
+
+            // 3. Start episode generation in background (don't await)
+            supabase.functions.invoke('generate-series-episode', {
                 body: {
                     series_id: seriesId,
                     moral_key: selectedMoralKey,
                     length_setting: length,
                     make_final: makeFinal,
                     notify_on_complete: true,
+                    request_id: request.id,
                 },
+            }).catch(err => {
+                // Ignore timeout errors - function continues in background
+                if (err?.name !== 'FunctionsFetchError') {
+                    console.error('Background generation error:', err);
+                }
             });
 
-            if (error) throw error;
-
-            // Navigate to story view
-            if (data.story_id) {
-                router.replace(`/(app)/story/${data.story_id}`);
-            } else {
-                router.back();
-            }
+            // 4. Show alert and navigate to home
+            Alert.alert(
+                '✨ Folge wird erstellt',
+                'Du wirst benachrichtigt, sobald die Folge fertig ist. Der Fortschritt wird auf der Startseite angezeigt.',
+                [{
+                    text: 'OK',
+                    onPress: () => router.replace('/(app)/(tabs)/home')
+                }]
+            );
         } catch (error) {
             console.error('Error generating episode:', error);
+            Alert.alert('Fehler', 'Die Folge konnte nicht erstellt werden.');
             setIsGenerating(false);
         }
     };
