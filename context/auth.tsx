@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
 import { registerForPushNotifications } from '@/lib/notifications';
+import { supabase } from '@/lib/supabase';
+import { Session, User } from '@supabase/supabase-js';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 interface AuthContextType {
     session: Session | null;
@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             email,
             password,
             options: {
-                emailRedirectTo: 'traumfunke://verify',
+                emailRedirectTo: 'nara://verify',
             },
         });
         return { error: error ? new Error(error.message) : null };
@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const resetPassword = async (email: string) => {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: 'traumfunke://reset-password',
+            redirectTo: 'nara://reset-password',
         });
         return { error: error ? new Error(error.message) : null };
     };

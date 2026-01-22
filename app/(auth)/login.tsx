@@ -1,19 +1,22 @@
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { Colors } from '@/constants/theme';
+import { useAuth } from '@/context/auth';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import useI18n from '@/hooks/useI18n';
+import { Image } from 'expo-image';
+import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-    View,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    StyleSheet,
+    Alert,
     KeyboardAvoidingView,
     Platform,
-    ActivityIndicator,
-    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
-import { Link, useRouter } from 'expo-router';
-import { useAuth } from '@/context/auth';
-import { LinearGradient } from 'expo-linear-gradient';
-import useI18n from '@/hooks/useI18n';
 
 export default function LoginScreen() {
     const [email, setEmail] = useState('');
@@ -22,6 +25,8 @@ export default function LoginScreen() {
     const { signIn } = useAuth();
     const router = useRouter();
     const { t } = useI18n();
+    const colorScheme = useColorScheme();
+    const theme = Colors[colorScheme ?? 'light'];
 
     const handleLogin = async () => {
         if (!email || !password) {
@@ -37,13 +42,9 @@ export default function LoginScreen() {
             if (error.message.includes('Invalid login credentials')) {
                 Alert.alert(t('common.error'), t('errors.invalidCredentials'));
             } else if (error.message.includes('Email not confirmed')) {
-                Alert.alert(
-                    t('auth.emailNotConfirmed'),
-                    t('auth.confirmEmail'),
-                    [
-                        { text: 'OK', onPress: () => router.push('/(auth)/verify-email') }
-                    ]
-                );
+                Alert.alert(t('auth.emailNotConfirmed'), t('auth.confirmEmail'), [
+                    { text: 'OK', onPress: () => router.push('/(auth)/verify-email') },
+                ]);
             } else {
                 Alert.alert(t('common.error'), error.message);
             }
@@ -52,75 +53,74 @@ export default function LoginScreen() {
 
     return (
         <KeyboardAvoidingView
-            style={styles.container}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
-            <View style={styles.content}>
-                {/* Logo/Header Section */}
+            style={[styles.container, { backgroundColor: theme.background }]}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                keyboardShouldPersistTaps="handled">
                 <View style={styles.header}>
-                    <Text style={styles.emoji}>🌙</Text>
-                    <Text style={styles.title}>Traumfunke</Text>
-                    <Text style={styles.subtitle}>{t('auth.loginSubtitle')}</Text>
+                    <Image
+                        source={require('@/assets/images/icon.png')}
+                        style={styles.logo}
+                        contentFit="contain"
+                    />
+                    <Text style={[styles.title, { color: theme.text }]}>Nara</Text>
+                    <Text style={[styles.subtitle, { color: theme.primary }]}>
+                        {t('auth.loginSubtitle')}
+                    </Text>
                 </View>
 
-                {/* Form Section */}
-                <View style={styles.form}>
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>{t('auth.email')}</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="deine@email.de"
-                            placeholderTextColor="#8B7FA8"
-                            value={email}
-                            onChangeText={setEmail}
-                            autoCapitalize="none"
-                            keyboardType="email-address"
-                            autoComplete="email"
-                        />
-                    </View>
+                <Card style={styles.card}>
+                    <Input
+                        label={t('auth.email')}
+                        placeholder="mamapapa@email.com"
+                        value={email}
+                        onChangeText={setEmail}
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                        autoComplete="email"
+                    />
 
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>{t('auth.password')}</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="••••••••"
-                            placeholderTextColor="#8B7FA8"
-                            value={password}
-                            onChangeText={setPassword}
-                            secureTextEntry
-                            autoComplete="password"
-                        />
-                    </View>
+                    <Input
+                        label={t('auth.password')}
+                        placeholder="••••••••"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry
+                        autoComplete="password"
+                    />
 
                     <Link href="/(auth)/forgot-password" asChild>
-                        <TouchableOpacity style={styles.forgotButton}>
-                            <Text style={styles.forgotText}>{t('auth.forgotPassword')}</Text>
-                        </TouchableOpacity>
+                        <Button
+                            title={t('auth.forgotPassword')}
+                            onPress={() => { }}
+                            variant="ghost"
+                            style={styles.forgotPass}
+                        />
                     </Link>
 
-                    <TouchableOpacity
-                        style={styles.loginButton}
+                    <Button
+                        title={t('auth.loginButton')}
                         onPress={handleLogin}
-                        disabled={isLoading}
-                    >
-                        {isLoading ? (
-                            <ActivityIndicator color="#FFFFFF" />
-                        ) : (
-                            <Text style={styles.loginButtonText}>{t('auth.loginButton')}</Text>
-                        )}
-                    </TouchableOpacity>
-                </View>
+                        isLoading={isLoading}
+                        style={styles.loginButton}
+                    />
+                </Card>
 
-                {/* Register Link */}
-                <View style={styles.registerContainer}>
-                    <Text style={styles.registerText}>{t('auth.noAccount')} </Text>
+                <View style={styles.footer}>
+                    <Text style={[styles.footerText, { color: theme.icon }]}>
+                        {t('auth.noAccount')}{' '}
+                    </Text>
                     <Link href="/(auth)/register" asChild>
-                        <TouchableOpacity>
-                            <Text style={styles.registerLink}>{t('auth.registerNow')}</Text>
-                        </TouchableOpacity>
+                        <Button
+                            title={t('auth.registerNow')}
+                            onPress={() => { }}
+                            variant="ghost"
+                            style={styles.registerButton}
+                        />
                     </Link>
                 </View>
-            </View>
+            </ScrollView>
         </KeyboardAvoidingView>
     );
 }
@@ -128,89 +128,63 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#1A1625',
     },
-    content: {
-        flex: 1,
-        paddingHorizontal: 24,
+    scrollContent: {
+        flexGrow: 1,
         justifyContent: 'center',
+        padding: 24,
     },
     header: {
         alignItems: 'center',
-        marginBottom: 48,
+        marginBottom: 40,
     },
-    emoji: {
-        fontSize: 64,
-        marginBottom: 16,
+    logo: {
+        width: 100,
+        height: 100,
+        marginBottom: 24,
+        borderRadius: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
     },
     title: {
         fontSize: 32,
-        fontWeight: 'bold',
-        color: '#F5F3FF',
+        fontWeight: '800', // Bolder title
         marginBottom: 8,
+        letterSpacing: -0.5,
     },
     subtitle: {
-        fontSize: 16,
-        color: '#A78BFA',
-        textAlign: 'center',
+        fontSize: 18,
+        fontWeight: '500',
     },
-    form: {
-        gap: 16,
+    card: {
+        marginBottom: 32,
+        padding: 24,
+        borderRadius: 24,
     },
-    inputContainer: {
-        gap: 8,
-    },
-    label: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#E9E3F5',
-        marginLeft: 4,
-    },
-    input: {
-        backgroundColor: '#2D2640',
-        borderRadius: 12,
-        padding: 16,
-        fontSize: 16,
-        color: '#F5F3FF',
-        borderWidth: 1,
-        borderColor: '#4C4270',
-    },
-    forgotButton: {
+    forgotPass: {
         alignSelf: 'flex-end',
-    },
-    forgotText: {
-        color: '#A78BFA',
-        fontSize: 14,
+        paddingVertical: 8,
+        paddingHorizontal: 0,
+        marginBottom: 24,
+        height: 32,
     },
     loginButton: {
-        backgroundColor: '#7C3AED',
-        borderRadius: 12,
-        padding: 16,
-        alignItems: 'center',
-        marginTop: 8,
-        shadowColor: '#7C3AED',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 4,
+        width: '100%',
     },
-    loginButtonText: {
-        color: '#FFFFFF',
-        fontSize: 18,
-        fontWeight: '600',
-    },
-    registerContainer: {
+    footer: {
         flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 32,
     },
-    registerText: {
-        color: '#8B7FA8',
+    footerText: {
         fontSize: 15,
     },
-    registerLink: {
-        color: '#A78BFA',
-        fontSize: 15,
-        fontWeight: '600',
+    registerButton: {
+        paddingVertical: 0,
+        paddingHorizontal: 4,
+        minWidth: 0,
+        height: 32,
     },
 });

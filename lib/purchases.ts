@@ -1,6 +1,6 @@
-import Purchases, { LOG_LEVEL, CustomerInfo, PurchasesPackage } from 'react-native-purchases';
-import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
+import Purchases, { CustomerInfo, LOG_LEVEL, PurchasesPackage } from 'react-native-purchases';
 import { supabase } from './supabase';
 
 // RevenueCat API Keys
@@ -100,6 +100,8 @@ export const purchasePackage = async (pkg: PurchasesPackage): Promise<CustomerIn
  * Check if user has premium entitlement
  */
 export const checkPremiumStatus = async (): Promise<boolean> => {
+    return false; // Coin only model
+    /*
     if (!isInitialized) return false;
     try {
         const customerInfo = await Purchases.getCustomerInfo();
@@ -108,6 +110,7 @@ export const checkPremiumStatus = async (): Promise<boolean> => {
         console.error('Failed to check premium status:', error);
         return false;
     }
+    */
 };
 
 /**
@@ -197,7 +200,7 @@ export const addCoins = async (amount: number, description: string = 'Coin purch
 /**
  * Spend coins (called when creating a story)
  */
-export const spendCoin = async (storyId?: string): Promise<boolean> => {
+export const spendCoin = async (amount: number = 1, storyId?: string): Promise<boolean> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
 
@@ -210,24 +213,24 @@ export const spendCoin = async (storyId?: string): Promise<boolean> => {
 
     if (!profile) return false;
 
-    // Premium users don't spend coins
-    if (profile.is_premium) return true;
+    // Premium users don't spend coins - REMOVED for Coin Only Model
+    // if (profile.is_premium) return true;
 
     // Check if enough coins
-    if ((profile.coin_balance || 0) < 1) return false;
+    if ((profile.coin_balance || 0) < amount) return false;
 
     // Deduct coin
     await supabase
         .from('profiles')
-        .update({ coin_balance: (profile.coin_balance || 0) - 1 })
+        .update({ coin_balance: (profile.coin_balance || 0) - amount })
         .eq('id', user.id);
 
     // Log transaction
     await supabase.from('coin_transactions').insert({
         user_id: user.id,
-        amount: -1,
+        amount: -amount,
         transaction_type: 'use',
-        description: 'Geschichte erstellt',
+        description: amount === 1 ? 'Geschichte erstellt' : 'Geschichte mit Bildern erstellt',
         story_id: storyId,
     });
 

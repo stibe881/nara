@@ -68,7 +68,7 @@
         "settings": "Paramètres"
     },
     "home": {
-        "welcome": "Bienvenue sur Traumfunke",
+        "welcome": "Bienvenue sur Nara",
         "greeting": "Bonsoir ! 🌙",
         "subtitle": "C'est l'heure d'une histoire",
         "createStory": "Créer une histoire",
@@ -223,7 +223,7 @@
         "notificationsDisabled": "Désactivées",
         "language": "Langue",
         "selectLanguage": "Choisir la langue",
-        "about": "À propos de Traumfunke",
+        "about": "À propos de Nara",
         "version": "Version",
         "logout": "Se déconnecter",
         "logoutConfirm": "Voulez-vous vraiment vous déconnecter ?",

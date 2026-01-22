@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { getCoinBalance } from '@/lib/purchases';
 import { supabase } from '@/lib/supabase';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface CoinBalanceProps {
     showAlways?: boolean;
@@ -46,7 +45,8 @@ export default function CoinBalance({ showAlways = false }: CoinBalanceProps) {
         setIsLoading(false);
     };
 
-    // Don't show for premium users (unless showAlways)
+    // Coin only model - no premium badge
+    /*
     if (isPremium && !showAlways) {
         return (
             <TouchableOpacity
@@ -58,6 +58,7 @@ export default function CoinBalance({ showAlways = false }: CoinBalanceProps) {
             </TouchableOpacity>
         );
     }
+    */
 
     if (isLoading) {
         return null;

@@ -1,53 +1,68 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Nara V2 Theme: "Card & Canvas"
+ * A high-clarity, modern, light-first design system.
  */
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+const tintColorLight = '#6D28D9'; // Stronger Violet (700)
+const tintColorDark = '#A78BFA'; // Lighter Violet (400) - Fallback if dark mode is forced
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
+    text: '#1E293B', // Slate 800 - High contrast text
+    background: '#F8FAFC', // Slate 50 - Very soft off-white canvas
     tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
+    surface: '#FFFFFF', // Pure white cards
+    icon: '#64748B', // Slate 500
+    tabIconDefault: '#94A3B8',
     tabIconSelected: tintColorLight,
+    primary: '#7C3AED', // Violet 600 - Main Brand Color
+    secondary: '#F59E0B', // Amber 500 - Warm accent
+    accent: '#EC4899', // Pink 500 - Playful accent
+    border: '#E2E8F0', // Slate 200 - Subtle borders
+    error: '#EF4444', // Red 500
+    // V2 Specifics
+    cardShadow: '#64748B', // Shadow color
+    subtext: '#475569', // Slate 600
   },
+  // Dark mode is kept for system compatibility but user requested "Light & Modern"
+  // We will prioritize Light mode in V2.
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
+    text: '#F1F5F9', // Slate 100
+    background: '#0F172A', // Slate 900
     tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
+    surface: '#1E293B', // Slate 800
+    icon: '#94A3B8',
+    tabIconDefault: '#94A3B8',
     tabIconSelected: tintColorDark,
+    primary: '#8B5CF6', // Violet 500
+    secondary: '#F59E0B',
+    accent: '#EC4899',
+    border: '#334155', // Slate 700
+    error: '#EF4444',
+    cardShadow: '#000000',
+    subtext: '#CBD5E1',
   },
 };
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
+    sans: 'System',
+    serif: 'New York', // Great reading font on iOS
+    rounded: 'System',
+    mono: 'Menlo',
   },
-  default: {
-    sans: 'normal',
+  android: {
+    sans: 'Roboto',
     serif: 'serif',
-    rounded: 'normal',
+    rounded: 'sans-serif-medium',
     mono: 'monospace',
   },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+  default: {
+    sans: 'system-ui',
+    serif: 'serif',
+    rounded: 'system-ui',
+    mono: 'monospace',
   },
 });

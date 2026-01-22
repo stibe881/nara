@@ -4,33 +4,33 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider, useAuth } from '@/context/auth';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { initializePurchases } from '@/lib/purchases';
 
 // Custom dark theme with warm colors for bedtime app
-const TraumfunkeDarkTheme = {
+const NaraDarkTheme = {
   ...DarkTheme,
   colors: {
     ...DarkTheme.colors,
-    primary: '#A78BFA', // Soft purple
-    background: '#1A1625', // Deep purple-black
-    card: '#2D2640', // Slightly lighter
-    text: '#F5F3FF',
-    border: '#4C4270',
-    notification: '#F472B6',
+    primary: '#8B5CF6',
+    background: '#0F172A',
+    card: '#1E293B',
+    text: '#F1F5F9',
+    border: '#334155',
+    notification: '#EC4899',
   },
 };
 
-const TraumfunkeLightTheme = {
+const NaraLightTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: '#7C3AED', // Vibrant purple
-    background: '#FEF9FF', // Soft lavender white
+    primary: '#7C3AED',
+    background: '#F8FAFC',
     card: '#FFFFFF',
-    text: '#1A1625',
-    border: '#E9E3F5',
+    text: '#1E293B',
+    border: '#E2E8F0',
     notification: '#EC4899',
   },
 };
@@ -72,7 +72,7 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? TraumfunkeDarkTheme : TraumfunkeLightTheme}>
+      <ThemeProvider value={colorScheme === 'dark' ? NaraDarkTheme : NaraLightTheme}>
         <RootLayoutNav />
         <StatusBar style="auto" />
       </ThemeProvider>

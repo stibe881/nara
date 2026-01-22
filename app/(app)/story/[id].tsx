@@ -1,32 +1,32 @@
+import { Button } from '@/components/ui/Button';
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { supabase } from '@/lib/supabase';
+import { Ionicons } from '@expo/vector-icons';
+import * as Print from 'expo-print';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import * as Sharing from 'expo-sharing';
 import { useEffect, useState } from 'react';
 import {
-    View,
-    Text,
-    StyleSheet,
-    ScrollView,
-    TouchableOpacity,
     ActivityIndicator,
-    Image,
-    Share,
     Alert,
+    ScrollView,
+    Share,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
-import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '@/lib/supabase';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
-import { Video, ResizeMode } from 'expo-av';
+// NOTE: Reusing logic from previous file but applying V2 design
 import AnimatedSceneImage from '@/components/AnimatedSceneImage';
-import type { Story, StoryScene, Child } from '@/types/supabase';
-import useI18n from '@/hooks/useI18n';
 
 export default function StoryViewerScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
-    const { t } = useI18n();
-    const [story, setStory] = useState<Story | null>(null);
-    const [scenes, setScenes] = useState<StoryScene[]>([]);
-    const [children, setChildren] = useState<Child[]>([]);
+    const colorScheme = useColorScheme();
+    const theme = Colors[colorScheme ?? 'light'];
+    const [story, setStory] = useState<any>(null);
+    const [scenes, setScenes] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isExporting, setIsExporting] = useState(false);
 
@@ -35,466 +35,147 @@ export default function StoryViewerScreen() {
     }, [id]);
 
     const loadStory = async () => {
-        setIsLoading(true);
-        try {
-            // Load story
-            const { data: storyData } = await supabase
-                .from('stories')
-                .select('*, story_requests(status)')
-                .eq('id', id)
-                .single();
-
-            // Check if story is ready
-            if (storyData?.story_requests && storyData.story_requests.status !== 'finished') {
-                Alert.alert(
-                    'Noch nicht fertig',
-                    'Diese Geschichte wird noch generiert. Bitte gedulde dich noch einen Moment.',
-                    [{ text: 'OK', onPress: () => router.back() }]
-                );
-                setIsLoading(false);
-                return;
-            }
-
-            if (storyData) setStory(storyData);
-
-            // Load scenes
-            const { data: scenesData } = await supabase
-                .from('story_scenes')
-                .select('*')
-                .eq('story_id', id)
-                .order('scene_index');
-
-            if (scenesData) setScenes(scenesData);
-
-            // Load children
-            const { data: storyChildren } = await supabase
-                .from('story_children')
-                .select('child_id')
-                .eq('story_id', id);
-
-            if (storyChildren && storyChildren.length > 0) {
-                const childIds = storyChildren.map(sc => sc.child_id);
-                const { data: childrenData } = await supabase
-                    .from('children')
-                    .select('*')
-                    .in('id', childIds);
-
-                if (childrenData) setChildren(childrenData);
-            }
-        } catch (error) {
-            console.error('Error loading story:', error);
-        }
+        const { data } = await supabase.from('stories').select('*, content').eq('id', id).single();
+        if (data) setStory(data);
+        const { data: scenesData } = await supabase.from('story_scenes').select('*').eq('story_id', id).order('scene_index');
+        if (scenesData) setScenes(scenesData);
         setIsLoading(false);
     };
 
-    const toggleFavorite = async () => {
-        if (!story) return;
-
+    const handleShare = async () => {
         try {
-            const newValue = !story.is_favorite;
-            await supabase
-                .from('stories')
-                .update({ is_favorite: newValue })
-                .eq('id', id);
-
-            setStory({ ...story, is_favorite: newValue });
+            const message = `${story.title}\n\n${story.content.moral_summary || ''}\n\nLies die ganze Geschichte auf Nara!`;
+            await Share.share({
+                message,
+                title: story.title,
+            });
         } catch (error) {
-            console.error('Error toggling favorite:', error);
+            console.error(error);
         }
     };
 
     const handleExportPDF = async () => {
         if (!story) return;
         setIsExporting(true);
-
         try {
-            const childrenNames = children.map(c => c.name).join(', ') || 'Unbekannt';
-            const date = new Date(story.created_at).toLocaleDateString('de-DE');
-
+            // Simple HTML template for PDF
             const html = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <style>
-            body { 
-              font-family: Georgia, serif; 
-              padding: 40px;
-              line-height: 1.8;
-              color: #333;
-            }
-            h1 { 
-              color: #4A3F35; 
-              text-align: center;
-              margin-bottom: 10px;
-              font-size: 28px;
-            }
-            .meta {
-              text-align: center;
-              color: #888;
-              margin-bottom: 40px;
-              font-size: 14px;
-            }
-            .paragraph {
-              text-indent: 2em;
-              margin-bottom: 1.2em;
-              font-size: 16px;
-            }
-            .moral {
-              margin-top: 50px;
-              padding: 24px;
-              background: linear-gradient(135deg, #FFF9E6 0%, #FFF5D6 100%);
-              border-radius: 12px;
-              font-style: italic;
-              border-left: 4px solid #F59E0B;
-            }
-            .moral strong {
-              color: #92400E;
-            }
-            .footer {
-              margin-top: 60px;
-              text-align: center;
-              color: #aaa;
-              font-size: 12px;
-            }
-          </style>
-        </head>
-        <body>
-          <h1>${story.title}</h1>
-          <p class="meta">
-            Eine Geschichte für ${childrenNames}<br>
-            Erstellt am ${date}
-          </p>
-          
-          ${story.content.story.map(p =>
-                `<p class="paragraph">${p.text}</p>`
-            ).join('')}
-          
-          <div class="moral">
-            <strong>Die Moral:</strong> ${story.content.moral_summary}
-          </div>
-          
-          <p class="footer">Erstellt mit Traumfunke 🌙</p>
-        </body>
-        </html>
-      `;
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <style>
+                        body { font-family: 'Helvetica', sans-serif; padding: 40px; color: #333; }
+                        h1 { text-align: center; color: #7C3AED; margin-bottom: 40px; }
+                        p { font-size: 16px; line-height: 1.6; margin-bottom: 20px; }
+                        .moral { background: #FFF9E6; padding: 20px; border-left: 4px solid #F59E0B; margin-top: 40px; font-style: italic; }
+                    </style>
+                </head>
+                <body>
+                    <h1>${story.title}</h1>
+                    ${story.content.story.map((p: any) => `<p>${p.text}</p>`).join('')}
+                    <div class="moral">
+                        <strong>Die Moral:</strong> ${story.content.moral_summary}
+                    </div>
+                </body>
+                </html>
+            `;
 
             const { uri } = await Print.printToFileAsync({ html });
-
-            if (await Sharing.isAvailableAsync()) {
-                await Sharing.shareAsync(uri, {
-                    mimeType: 'application/pdf',
-                    dialogTitle: `${story.title} teilen`,
-                });
-            }
+            await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
         } catch (error) {
-            console.error('Error exporting PDF:', error);
+            console.error(error);
             Alert.alert('Fehler', 'PDF konnte nicht erstellt werden.');
         }
         setIsExporting(false);
     };
 
-    const handleShare = async () => {
-        if (!story) return;
-
-        try {
-            await Share.share({
-                message: `${story.title}\n\n${story.content.story.map(p => p.text).join('\n\n')}\n\n✨ ${story.content.moral_summary}\n\n— Erstellt mit Traumfunke`,
-            });
-        } catch (error) {
-            console.error('Error sharing:', error);
-        }
-    };
-
-    const handleDelete = async () => {
-        Alert.alert(
-            'Geschichte löschen',
-            'Möchtest du diese Geschichte wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
-            [
-                { text: 'Abbrechen', style: 'cancel' },
-                {
-                    text: 'Löschen',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            // Delete story scenes first
-                            await supabase.from('story_scenes').delete().eq('story_id', id);
-                            // Delete story children links
-                            await supabase.from('story_children').delete().eq('story_id', id);
-                            // Delete the story
-                            await supabase.from('stories').delete().eq('id', id);
-
-                            // Navigate back
-                            router.back();
-                        } catch (error) {
-                            console.error('Error deleting story:', error);
-                            Alert.alert('Fehler', 'Geschichte konnte nicht gelöscht werden.');
-                        }
-                    },
-                },
-            ]
-        );
-    };
-
-    if (isLoading) {
-        return (
-            <View style={[styles.container, styles.centered]}>
-                <ActivityIndicator size="large" color="#A78BFA" />
-            </View>
-        );
+    if (isLoading || !story) {
+        return <View style={[styles.centered, { backgroundColor: theme.background }]}><ActivityIndicator color={theme.primary} /></View>;
     }
 
-    if (!story) {
-        return (
-            <View style={[styles.container, styles.centered]}>
-                <Text style={styles.errorText}>Geschichte nicht gefunden</Text>
-            </View>
-        );
-    }
-
-    // Find scene for each paragraph
-    const getSceneForIndex = (index: number) => {
-        let sceneCount = 0;
-        for (let i = 0; i <= index; i++) {
-            if (story.content.story[i]?.scene_marker) {
-                sceneCount++;
-            }
-        }
-        if (story.content.story[index]?.scene_marker) {
-            return scenes[sceneCount - 1];
-        }
-        return null;
+    const getScene = (index: number) => {
+        let count = 0;
+        for (let i = 0; i <= index; i++) if (story.content.story[i]?.scene_marker) count++;
+        return story.content.story[index]?.scene_marker ? scenes[count - 1] : null;
     };
 
     return (
         <>
-            <Stack.Screen
-                options={{
-                    title: story.title,
-                    headerRight: () => (
-                        <TouchableOpacity onPress={toggleFavorite} style={styles.headerButton}>
-                            <Ionicons
-                                name={story.is_favorite ? 'heart' : 'heart-outline'}
-                                size={24}
-                                color={story.is_favorite ? '#F472B6' : '#F5F3FF'}
-                            />
-                        </TouchableOpacity>
-                    ),
-                }}
-            />
+            <Stack.Screen options={{
+                headerShown: true,
+                headerTransparent: true,
+                headerTitle: '',
+                headerTintColor: theme.text,
+            }} />
+            <View style={[styles.container, { backgroundColor: theme.background }]}>
+                <ScrollView contentContainerStyle={styles.content}>
+                    <View style={styles.headerSpacer} />
 
-            <ScrollView
-                style={styles.container}
-                contentContainerStyle={styles.content}
-                showsVerticalScrollIndicator={false}
-            >
-                {/* Header */}
-                <View style={styles.header}>
-                    <Text style={styles.title}>{story.title}</Text>
-                    <View style={styles.meta}>
-                        {children.length > 0 && (
-                            <Text style={styles.metaText}>
-                                👧 {children.map(c => c.name).join(', ')}
-                            </Text>
-                        )}
-                        <Text style={styles.metaText}>
-                            📅 {new Date(story.created_at).toLocaleDateString('de-DE')}
-                        </Text>
-                        {story.reading_time_minutes && (
-                            <Text style={styles.metaText}>
-                                ⏱️ {story.reading_time_minutes} Min.
-                            </Text>
-                        )}
-                    </View>
-                </View>
+                    <Text style={[styles.title, { color: theme.text }]}>{story.title}</Text>
 
-                {/* Story Content */}
-                <View style={styles.storyContent}>
-                    {story.content.story.map((paragraph, index) => {
-                        const scene = getSceneForIndex(index);
+                    <View style={styles.body}>
+                        {story.content.story.map((p: any, i: number) => {
+                            const scene = getScene(i);
+                            const hasImage = scene && scene.image_url;
 
-                        return (
-                            <View key={index}>
-                                {/* Scene Media with Ken-Burns Animation */}
-                                {scene && (
-                                    <View style={styles.sceneContainer}>
-                                        {scene.video_url ? (
-                                            <Video
-                                                source={{ uri: scene.video_url }}
-                                                style={styles.sceneMedia}
-                                                resizeMode={ResizeMode.COVER}
-                                                shouldPlay
-                                                isLooping
-                                                isMuted
-                                            />
-                                        ) : scene.image_url ? (
+                            return (
+                                <View key={i} style={styles.block}>
+                                    {hasImage && (
+                                        <View style={styles.sceneFrame}>
                                             <AnimatedSceneImage imageUrl={scene.image_url} />
-                                        ) : null}
-                                    </View>
-                                )}
+                                        </View>
+                                    )}
+                                    <Text style={[styles.paragraph, { color: theme.text }]}>
+                                        {p.text}
+                                    </Text>
+                                </View>
+                            );
+                        })}
+                    </View>
 
-                                {/* Paragraph */}
-                                <Text style={styles.paragraph}>{paragraph.text}</Text>
-                            </View>
-                        );
-                    })}
-                </View>
+                    <View style={[styles.moralBox, { backgroundColor: '#FFF9E6', borderLeftColor: theme.secondary }]}>
+                        <Text style={[styles.moralTitle, { color: theme.secondary }]}>Die Moral</Text>
+                        <Text style={[styles.moralText, { color: '#444' }]}>{story.content.moral_summary}</Text>
+                    </View>
 
-                {/* Moral */}
-                <View style={styles.moralContainer}>
-                    <Text style={styles.moralLabel}>✨ Die Moral der Geschichte</Text>
-                    <Text style={styles.moralText}>{story.content.moral_summary}</Text>
-                </View>
+                    <View style={{ height: 100 }} />
+                </ScrollView>
 
-                {/* Actions */}
-                <View style={styles.actions}>
-                    <TouchableOpacity
-                        style={styles.actionButton}
+                {/* Floating Action Bar */}
+                <View style={[styles.fabBar, { backgroundColor: theme.surface, shadowColor: theme.cardShadow }]}>
+                    <TouchableOpacity style={styles.fabButton} onPress={handleShare}>
+                        <Ionicons name="share-social-outline" size={24} color={theme.text} />
+                    </TouchableOpacity>
+                    <Button
+                        title={isExporting ? "PDF wird erstellt..." : "Als PDF exportieren"}
                         onPress={handleExportPDF}
-                        disabled={isExporting}
-                    >
-                        {isExporting ? (
-                            <ActivityIndicator size="small" color="#A78BFA" />
-                        ) : (
-                            <Ionicons name="document-outline" size={22} color="#A78BFA" />
-                        )}
-                        <Text style={styles.actionText}>PDF</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
-                        <Ionicons name="share-outline" size={22} color="#A78BFA" />
-                        <Text style={styles.actionText}>Teilen</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-                        <Ionicons name="trash-outline" size={22} color="#EF4444" />
-                        <Text style={styles.deleteText}>Löschen</Text>
-                    </TouchableOpacity>
+                        style={{ flex: 1, height: 48 }}
+                        isLoading={isExporting}
+                    />
                 </View>
-            </ScrollView>
+            </View>
         </>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#1A1625',
+    container: { flex: 1 },
+    centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    content: { padding: 24 },
+    headerSpacer: { height: 60 },
+    title: { fontSize: 32, fontWeight: '800', textAlign: 'center', marginBottom: 32, lineHeight: 40 },
+    body: { marginBottom: 32 },
+    block: { marginBottom: 24 },
+    paragraph: { fontSize: 20, lineHeight: 32 }, // Larger reading font
+    sceneFrame: { height: 250, borderRadius: 24, overflow: 'hidden', marginBottom: 24, backgroundColor: '#E2E8F0' },
+    moralBox: { padding: 24, borderRadius: 16, borderLeftWidth: 4, marginBottom: 40 },
+    moralTitle: { fontSize: 14, fontWeight: '700', marginBottom: 8, textTransform: 'uppercase' },
+    moralText: { fontSize: 18, fontStyle: 'italic', lineHeight: 28 },
+    fabBar: {
+        position: 'absolute', bottom: 32, left: 24, right: 24,
+        flexDirection: 'row', alignItems: 'center', gap: 12,
+        padding: 12, borderRadius: 20,
+        shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 8
     },
-    centered: {
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    headerButton: {
-        padding: 8,
-    },
-    content: {
-        padding: 20,
-        paddingBottom: 40,
-    },
-    header: {
-        marginBottom: 28,
-    },
-    title: {
-        fontSize: 26,
-        fontWeight: 'bold',
-        color: '#F5F3FF',
-        lineHeight: 34,
-        marginBottom: 12,
-    },
-    meta: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 12,
-    },
-    metaText: {
-        fontSize: 13,
-        color: '#8B7FA8',
-    },
-    storyContent: {
-        marginBottom: 28,
-    },
-    paragraph: {
-        fontSize: 17,
-        lineHeight: 28,
-        color: '#E9E3F5',
-        marginBottom: 20,
-    },
-    sceneContainer: {
-        marginBottom: 20,
-        borderRadius: 16,
-        overflow: 'hidden',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 6,
-    },
-    sceneMedia: {
-        width: '100%',
-        height: 200,
-        backgroundColor: '#2D2640',
-    },
-    moralContainer: {
-        backgroundColor: '#2D2640',
-        borderRadius: 16,
-        padding: 20,
-        marginBottom: 24,
-        borderLeftWidth: 4,
-        borderLeftColor: '#F59E0B',
-    },
-    moralLabel: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#F59E0B',
-        marginBottom: 8,
-    },
-    moralText: {
-        fontSize: 16,
-        fontStyle: 'italic',
-        color: '#F5F3FF',
-        lineHeight: 24,
-    },
-    actions: {
-        flexDirection: 'row',
-        gap: 12,
-    },
-    actionButton: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-        backgroundColor: '#2D2640',
-        borderRadius: 12,
-        padding: 14,
-        borderWidth: 1,
-        borderColor: '#4C4270',
-    },
-    actionText: {
-        fontSize: 14,
-        fontWeight: '500',
-        color: '#A78BFA',
-    },
-    deleteButton: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-        borderRadius: 12,
-        padding: 14,
-        borderWidth: 1,
-        borderColor: 'rgba(239, 68, 68, 0.3)',
-    },
-    deleteText: {
-        fontSize: 14,
-        fontWeight: '500',
-        color: '#EF4444',
-    },
-    errorText: {
-        fontSize: 16,
-        color: '#8B7FA8',
-    },
+    fabButton: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F1F5F9' }
 });

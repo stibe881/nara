@@ -1,13 +1,19 @@
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Stack } from 'expo-router';
 
 export default function WizardLayout() {
+    const colorScheme = useColorScheme();
+    const theme = Colors[colorScheme ?? 'light'];
+
     return (
         <Stack
             screenOptions={{
-                headerStyle: { backgroundColor: '#1A1625' },
-                headerTintColor: '#F5F3FF',
-                headerTitleStyle: { fontWeight: '600' },
-                contentStyle: { backgroundColor: '#1A1625' },
+                headerStyle: { backgroundColor: theme.background },
+                headerTintColor: theme.text,
+                headerTitleStyle: { fontWeight: '700', color: theme.text },
+                headerShadowVisible: false,
+                contentStyle: { backgroundColor: theme.background },
                 animation: 'slide_from_right',
             }}
         >

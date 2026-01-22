@@ -1,26 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import useI18n from '@/hooks/useI18n';
 import {
-    View,
+    addCoins,
+    checkPremiumStatus,
+    getCoinBalance,
+    getOfferings,
+    PRODUCT_IDS,
+    purchasePackage,
+    restorePurchases,
+} from '@/lib/purchases';
+import { Stack, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    StyleSheet,
     Text,
     TouchableOpacity,
-    StyleSheet,
-    ScrollView,
-    Alert,
-    ActivityIndicator,
+    View,
 } from 'react-native';
-import { useRouter, Stack } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-    getOfferings,
-    purchasePackage,
-    checkPremiumStatus,
-    restorePurchases,
-    getCoinBalance,
-    addCoins,
-    PRODUCT_IDS,
-} from '@/lib/purchases';
-import useI18n from '@/hooks/useI18n';
 
 export default function SubscriptionScreen() {
     const router = useRouter();
@@ -96,7 +95,7 @@ export default function SubscriptionScreen() {
         <SafeAreaView style={styles.container} edges={['bottom']}>
             <Stack.Screen
                 options={{
-                    title: t('subscription.title'),
+                    title: 'Coin Shop', // Renamed from Abo
                     headerStyle: { backgroundColor: '#1A1625' },
                     headerTintColor: '#F5F3FF',
                 }}
@@ -104,106 +103,61 @@ export default function SubscriptionScreen() {
             <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
                 {/* Current Status */}
                 <View style={styles.statusCard}>
-                    {isPremium ? (
-                        <>
-                            <View style={styles.premiumBadge}>
-                                <Ionicons name="star" size={24} color="#FFD700" />
-                                <Text style={styles.premiumTitle}>{t('subscription.premiumActive')}</Text>
-                            </View>
-                            <Text style={styles.statusText}>
-                                {t('subscription.unlimitedAccess')}
-                            </Text>
-                            {expiresAt && (
-                                <Text style={styles.expiryText}>
-                                    {(t('subscription.expiresAt') || 'Läuft ab am')}: {new Date(expiresAt).toLocaleDateString()}
-                                </Text>
-                            )}
-                        </>
-                    ) : (
-                        <>
-                            <View style={styles.coinDisplay}>
-                                <Text style={styles.coinEmoji}>🪙</Text>
-                                <Text style={styles.coinAmount}>{coinBalance}</Text>
-                                <Text style={styles.coinLabel}>{t('subscription.coins')}</Text>
-                            </View>
-                            <Text style={styles.statusText}>
-                                {t('subscription.coinExchange')}
-                            </Text>
-                        </>
-                    )}
+                    <View style={styles.coinDisplay}>
+                        <Text style={styles.coinEmoji}>🪙</Text>
+                        <Text style={styles.coinAmount}>{coinBalance}</Text>
+                        <Text style={styles.coinLabel}>{t('subscription.coins')}</Text>
+                    </View>
+                    <Text style={styles.statusText}>
+                        {t('subscription.coinExchange')}
+                    </Text>
                 </View>
 
-                {!isPremium && (
-                    <>
-                        {/* Premium Section */}
-                        <View style={styles.section}>
-                            <Text style={styles.sectionTitle}>{t('subscription.becomePremium')}</Text>
-                            <Text style={styles.sectionSubtitle}>
-                                {t('subscription.unlimitedStories')}
-                            </Text>
+                {/* Coins Section */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>{t('subscription.buyCoins')}</Text>
+                    <Text style={styles.sectionSubtitle}>
+                        {t('subscription.payAsYouGo')}
+                    </Text>
 
-                            <TouchableOpacity
-                                style={[styles.packageCard, styles.yearlyCard]}
-                                onPress={() => {
-                                    const pkg = offerings?.availablePackages?.find(
-                                        (p: any) => p.product.identifier === PRODUCT_IDS.PREMIUM_YEARLY
-                                    );
-                                    if (pkg) handlePurchase(pkg);
-                                }}
-                                disabled={isPurchasing}
-                            >
-                                <View style={styles.bestValue}>
-                                    <Text style={styles.bestValueText}>{t('subscription.bestValue')}</Text>
-                                </View>
-                                <Text style={styles.packageTitle}>{t('subscription.yearlyPlan')}</Text>
-                                <Text style={styles.packagePrice}>{t('subscription.yearlyPrice')}</Text>
-                                <Text style={styles.packageInfo}>{t('subscription.yearlyInfo')}</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={styles.packageCard}
-                                onPress={() => {
-                                    const pkg = offerings?.availablePackages?.find(
-                                        (p: any) => p.product.identifier === PRODUCT_IDS.PREMIUM_MONTHLY
-                                    );
-                                    if (pkg) handlePurchase(pkg);
-                                }}
-                                disabled={isPurchasing}
-                            >
-                                <Text style={styles.packageTitle}>{t('subscription.monthlyPlan')}</Text>
-                                <Text style={styles.packagePrice}>{t('subscription.monthlyPrice')}</Text>
-                                <Text style={styles.packageInfo}>{t('subscription.monthlyInfo')}</Text>
-                            </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.packageCard}
+                        onPress={() => {
+                            const pkg = offerings?.availablePackages?.find(
+                                (p: any) => p.product.identifier === PRODUCT_IDS.COINS_5
+                            );
+                            if (pkg) handlePurchase(pkg);
+                        }}
+                        disabled={isPurchasing}
+                    >
+                        <View style={styles.coinPackage}>
+                            <Text style={styles.coinPackageEmoji}>🪙🪙🪙🪙🪙</Text>
+                            <View>
+                                <Text style={styles.packageTitle}>{t('subscription.fiveCoins')}</Text>
+                                <Text style={styles.packagePrice}>{t('subscription.fiveCoinsPrice')}</Text>
+                            </View>
                         </View>
+                    </TouchableOpacity>
 
-                        {/* Coins Section */}
-                        <View style={styles.section}>
-                            <Text style={styles.sectionTitle}>{t('subscription.buyCoins')}</Text>
-                            <Text style={styles.sectionSubtitle}>
-                                {t('subscription.payAsYouGo')}
-                            </Text>
-
-                            <TouchableOpacity
-                                style={styles.packageCard}
-                                onPress={() => {
-                                    const pkg = offerings?.availablePackages?.find(
-                                        (p: any) => p.product.identifier === PRODUCT_IDS.COINS_5
-                                    );
-                                    if (pkg) handlePurchase(pkg);
-                                }}
-                                disabled={isPurchasing}
-                            >
-                                <View style={styles.coinPackage}>
-                                    <Text style={styles.coinPackageEmoji}>🪙🪙🪙🪙🪙</Text>
-                                    <View>
-                                        <Text style={styles.packageTitle}>{t('subscription.fiveCoins')}</Text>
-                                        <Text style={styles.packagePrice}>{t('subscription.fiveCoinsPrice')}</Text>
-                                    </View>
-                                </View>
-                            </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.packageCard}
+                        onPress={() => {
+                            const pkg = offerings?.availablePackages?.find(
+                                (p: any) => p.product.identifier === PRODUCT_IDS.COINS_1
+                            );
+                            if (pkg) handlePurchase(pkg);
+                        }}
+                        disabled={isPurchasing}
+                    >
+                        <View style={styles.coinPackage}>
+                            <Text style={styles.coinPackageEmoji}>🪙</Text>
+                            <View>
+                                <Text style={styles.packageTitle}>1 Coin</Text>
+                                <Text style={styles.packagePrice}>€2.00</Text>
+                            </View>
                         </View>
-                    </>
-                )}
+                    </TouchableOpacity>
+                </View>
 
                 {/* Restore Purchases */}
                 <TouchableOpacity
@@ -240,7 +194,7 @@ const styles = StyleSheet.create({
     },
     content: {
         padding: 20,
-        paddingTop: 100,
+        paddingTop: 100, // Adjusted padding
         paddingBottom: 40,
     },
     statusCard: {
@@ -249,17 +203,6 @@ const styles = StyleSheet.create({
         padding: 24,
         alignItems: 'center',
         marginBottom: 24,
-    },
-    premiumBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        marginBottom: 8,
-    },
-    premiumTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#FFD700',
     },
     coinDisplay: {
         flexDirection: 'row',
@@ -284,12 +227,6 @@ const styles = StyleSheet.create({
         color: '#8B7FA8',
         textAlign: 'center',
     },
-    expiryText: {
-        fontSize: 12,
-        color: '#A78BFA',
-        marginTop: 8,
-        textAlign: 'center',
-    },
     section: {
         marginBottom: 24,
     },
@@ -312,24 +249,6 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderColor: 'transparent',
     },
-    yearlyCard: {
-        borderColor: '#7C3AED',
-        position: 'relative',
-    },
-    bestValue: {
-        position: 'absolute',
-        top: -10,
-        right: 16,
-        backgroundColor: '#7C3AED',
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 12,
-    },
-    bestValueText: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#FFFFFF',
-    },
     packageTitle: {
         fontSize: 18,
         fontWeight: '600',
@@ -339,11 +258,6 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         color: '#A78BFA',
-        marginTop: 4,
-    },
-    packageInfo: {
-        fontSize: 13,
-        color: '#8B7FA8',
         marginTop: 4,
     },
     coinPackage: {

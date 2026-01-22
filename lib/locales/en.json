@@ -68,7 +68,7 @@
         "settings": "Settings"
     },
     "home": {
-        "welcome": "Welcome to Traumfunke",
+        "welcome": "Welcome to Nara",
         "greeting": "Good evening! 🌙",
         "subtitle": "Time for a bedtime story",
         "createStory": "Create Story",
@@ -223,7 +223,7 @@
         "notificationsDisabled": "Disabled",
         "language": "Language",
         "selectLanguage": "Select Language",
-        "about": "About Traumfunke",
+        "about": "About Nara",
         "version": "Version",
         "logout": "Log out",
         "logoutConfirm": "Do you really want to log out?",

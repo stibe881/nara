@@ -1,31 +1,36 @@
-import { useEffect, useState } from 'react';
-import {
-    View,
-    Text,
-    StyleSheet,
-    TouchableOpacity,
-    FlatList,
-    ActivityIndicator,
-    Image,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '@/lib/supabase';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Colors } from '@/constants/theme';
 import { useAuth } from '@/context/auth';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import useI18n from '@/hooks/useI18n';
+import { supabase } from '@/lib/supabase';
 import { useWizardStore } from '@/stores/wizard';
 import type { Child } from '@/types/supabase';
-import useI18n from '@/hooks/useI18n';
+import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    FlatList,
+    StyleSheet,
+    Text,
+    View
+} from 'react-native';
 
 export default function WizardChildrenScreen() {
     const router = useRouter();
     const { user } = useAuth();
     const { t } = useI18n();
+    const colorScheme = useColorScheme();
+    const theme = Colors[colorScheme ?? 'light'];
+
     const { selectedChildIds, toggleChild, reset } = useWizardStore();
     const [children, setChildren] = useState<Child[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Reset wizard state when starting fresh
         reset();
         loadChildren();
     }, []);
@@ -38,7 +43,6 @@ export default function WizardChildrenScreen() {
                 .select('*')
                 .eq('user_id', user?.id)
                 .order('name');
-
             if (data) setChildren(data);
         } catch (error) {
             console.error('Error loading children:', error);
@@ -55,256 +59,109 @@ export default function WizardChildrenScreen() {
         const isSelected = selectedChildIds.includes(item.id);
 
         return (
-            <TouchableOpacity
-                style={[styles.childCard, isSelected && styles.childCardSelected]}
-                onPress={() => toggleChild(item.id)}
-            >
-                <View style={styles.checkbox}>
-                    {isSelected && <Ionicons name="checkmark" size={18} color="#FFFFFF" />}
+            <Card
+                style={[
+                    styles.childCard,
+                    isSelected && { borderColor: theme.primary, borderWidth: 2, backgroundColor: theme.surface }, // Highlight
+                ]}
+                variant={isSelected ? 'outlined' : 'default'}
+                onTouchEnd={() => toggleChild(item.id)}>
+                <View style={styles.childContent}>
+                    <View style={[styles.avatar, { backgroundColor: theme.border }]}>
+                        {item.photo_url ? (
+                            <Image source={{ uri: item.photo_url }} style={styles.avatarImage} />
+                        ) : (
+                            <Text style={{ fontSize: 24 }}>
+                                {item.gender === 'Junge' ? '👦' : item.gender === 'Maedchen' ? '👧' : '🧒'}
+                            </Text>
+                        )}
+                    </View>
+                    <View style={styles.childInfo}>
+                        <Text style={[styles.childName, { color: theme.text }]}>{item.name}</Text>
+                        <Text style={[styles.childMeta, { color: theme.icon }]}>{item.age} Jahre</Text>
+                    </View>
+                    <View
+                        style={[
+                            styles.checkbox,
+                            {
+                                backgroundColor: isSelected ? theme.primary : theme.background,
+                                borderColor: isSelected ? theme.primary : theme.border,
+                            },
+                        ]}>
+                        {isSelected && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+                    </View>
                 </View>
-                <View style={styles.avatar}>
-                    {item.photo_url ? (
-                        <Image source={{ uri: item.photo_url }} style={styles.avatarImage} />
-                    ) : (
-                        <Text style={styles.avatarText}>
-                            {item.gender === 'Junge' ? '👦' : item.gender === 'Maedchen' ? '👧' : '🧒'}
-                        </Text>
-                    )}
-                </View>
-                <View style={styles.childInfo}>
-                    <Text style={styles.childName}>{item.name}</Text>
-                    <Text style={styles.childMeta}>{item.age} Jahre</Text>
-                </View>
-            </TouchableOpacity>
+            </Card>
         );
     };
 
     if (isLoading) {
         return (
-            <View style={[styles.container, styles.centered]}>
-                <ActivityIndicator size="large" color="#A78BFA" />
-            </View>
-        );
-    }
-
-    if (children.length === 0) {
-        return (
-            <View style={[styles.container, styles.centered]}>
-                <Text style={styles.emptyIcon}>👶</Text>
-                <Text style={styles.emptyTitle}>Keine Kinder vorhanden</Text>
-                <Text style={styles.emptyText}>
-                    Bitte fuege zuerst ein Kind hinzu, um eine Geschichte zu erstellen.
-                </Text>
-                <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={() => router.push('/(app)/children/new')}
-                >
-                    <Text style={styles.addButtonText}>Kind hinzufügen</Text>
-                </TouchableOpacity>
+            <View style={[styles.centered, { backgroundColor: theme.background }]}>
+                <ActivityIndicator size="large" color={theme.primary} />
             </View>
         );
     }
 
     return (
-        <View style={styles.container}>
-            {/* Progress Indicator */}
+        <View style={[styles.container, { backgroundColor: theme.background }]}>
+            {/* Progress */}
             <View style={styles.progress}>
-                <View style={[styles.progressDot, styles.progressDotActive]} />
-                <View style={styles.progressLine} />
-                <View style={styles.progressDot} />
-                <View style={styles.progressLine} />
-                <View style={styles.progressDot} />
-                <View style={styles.progressLine} />
-                <View style={styles.progressDot} />
-                <View style={styles.progressLine} />
-                <View style={styles.progressDot} />
-                <View style={styles.progressLine} />
-                <View style={styles.progressDot} />
+                {/* Simplified Progress for V2 - Just specific active dot? Or simple text? Keeping dots for now but cleaner */}
+                {[...Array(6)].map((_, i) => (
+                    <View key={i} style={[styles.dot, { backgroundColor: i === 0 ? theme.primary : theme.border }]} />
+                ))}
             </View>
 
-            <Text style={styles.instruction}>
-                Waehle die Kinder aus, die in der Geschichte vorkommen sollen:
+            <Text style={[styles.instruction, { color: theme.text }]}>
+                Wer ist heute dabei?
             </Text>
 
-            <FlatList
-                data={children}
-                renderItem={renderChild}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.list}
-                showsVerticalScrollIndicator={false}
-            />
+            {children.length === 0 ? (
+                <View style={styles.emptyState}>
+                    <Text style={{ fontSize: 48, marginBottom: 16 }}>👶</Text>
+                    <Text style={[styles.emptyText, { color: theme.icon }]}>Keine Kinder gefunden.</Text>
+                    <Button title="Kind hinzufügen" onPress={() => router.push('/(app)/children/new')} style={{ marginTop: 24 }} />
+                </View>
+            ) : (
+                <FlatList
+                    data={children}
+                    renderItem={renderChild}
+                    keyExtractor={(item) => item.id}
+                    contentContainerStyle={styles.list}
+                    showsVerticalScrollIndicator={false}
+                />
+            )}
 
-            {/* Next Button */}
-            <View style={styles.footer}>
-                <TouchableOpacity
-                    style={[
-                        styles.nextButton,
-                        selectedChildIds.length === 0 && styles.nextButtonDisabled,
-                    ]}
+            <View style={[styles.footer, { borderTopColor: theme.border }]}>
+                <Button
+                    title="Weiter"
                     onPress={handleNext}
                     disabled={selectedChildIds.length === 0}
-                >
-                    <Text style={styles.nextButtonText}>Weiter</Text>
-                    <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-                </TouchableOpacity>
+                    style={styles.nextButton}
+                />
             </View>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#1A1625',
-    },
-    centered: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 24,
-    },
-    progress: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 20,
-        paddingHorizontal: 24,
-    },
-    progressDot: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-        backgroundColor: '#3D3255',
-    },
-    progressDotActive: {
-        backgroundColor: '#7C3AED',
-    },
-    progressLine: {
-        flex: 1,
-        height: 2,
-        backgroundColor: '#3D3255',
-        marginHorizontal: 4,
-    },
-    instruction: {
-        fontSize: 15,
-        color: '#A78BFA',
-        paddingHorizontal: 20,
-        marginBottom: 16,
-    },
-    list: {
-        padding: 16,
-        paddingTop: 0,
-    },
-    childCard: {
-        backgroundColor: '#2D2640',
-        borderRadius: 14,
-        padding: 16,
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 10,
-        borderWidth: 2,
-        borderColor: '#4C4270',
-    },
-    childCardSelected: {
-        borderColor: '#7C3AED',
-        backgroundColor: 'rgba(124, 58, 237, 0.1)',
-    },
-    checkbox: {
-        width: 26,
-        height: 26,
-        borderRadius: 13,
-        backgroundColor: '#3D3255',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-        borderWidth: 2,
-        borderColor: '#4C4270',
-    },
-    avatar: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: '#3D3255',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-        overflow: 'hidden',
-    },
-    avatarImage: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-    },
-    avatarText: {
-        fontSize: 22,
-    },
-    childInfo: {
-        flex: 1,
-    },
-    childName: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#F5F3FF',
-    },
-    childMeta: {
-        fontSize: 13,
-        color: '#8B7FA8',
-        marginTop: 2,
-    },
-    footer: {
-        padding: 16,
-        paddingBottom: 32,
-        borderTopWidth: 1,
-        borderTopColor: '#2D2640',
-    },
-    nextButton: {
-        backgroundColor: '#7C3AED',
-        borderRadius: 12,
-        padding: 16,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: 8,
-        shadowColor: '#7C3AED',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 4,
-    },
-    nextButtonDisabled: {
-        backgroundColor: '#3D3255',
-        shadowOpacity: 0,
-        elevation: 0,
-    },
-    nextButtonText: {
-        color: '#FFFFFF',
-        fontSize: 18,
-        fontWeight: '600',
-    },
-    emptyIcon: {
-        fontSize: 64,
-        marginBottom: 16,
-    },
-    emptyTitle: {
-        fontSize: 20,
-        fontWeight: '600',
-        color: '#F5F3FF',
-        marginBottom: 8,
-    },
-    emptyText: {
-        fontSize: 14,
-        color: '#8B7FA8',
-        textAlign: 'center',
-        marginBottom: 24,
-    },
-    addButton: {
-        backgroundColor: '#7C3AED',
-        paddingVertical: 12,
-        paddingHorizontal: 24,
-        borderRadius: 12,
-    },
-    addButtonText: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: '600',
-    },
+    container: { flex: 1 },
+    centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    progress: { flexDirection: 'row', justifyContent: 'center', gap: 8, paddingVertical: 24 },
+    dot: { width: 8, height: 8, borderRadius: 4 },
+    instruction: { fontSize: 24, fontWeight: '700', paddingHorizontal: 24, marginBottom: 24, textAlign: 'center' },
+    list: { padding: 24, paddingTop: 0 },
+    childCard: { padding: 16, marginBottom: 12 },
+    childContent: { flexDirection: 'row', alignItems: 'center' },
+    avatar: { width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', marginRight: 16, overflow: 'hidden' },
+    avatarImage: { width: 56, height: 56 },
+    childInfo: { flex: 1 },
+    childName: { fontSize: 18, fontWeight: '600' },
+    childMeta: { fontSize: 14 },
+    checkbox: { width: 28, height: 28, borderRadius: 14, borderWidth: 2, justifyContent: 'center', alignItems: 'center' },
+    footer: { padding: 24, borderTopWidth: 1 },
+    nextButton: { width: '100%' },
+    emptyState: { alignItems: 'center', padding: 40 },
+    emptyText: { fontSize: 16, textAlign: 'center' },
 });

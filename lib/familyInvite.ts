@@ -1,6 +1,6 @@
-import { supabase } from './supabase';
 import * as Linking from 'expo-linking';
-import { Share, Alert } from 'react-native';
+import { Alert, Share } from 'react-native';
+import { supabase } from './supabase';
 
 export interface FamilyInvite {
     id: string;
@@ -106,14 +106,14 @@ export const shareInvite = async (userId: string): Promise<boolean> => {
         return false;
     }
 
-    const deepLink = `traumfunke://invite/${invite.invite_code}`;
-    const message = `🌙 Traumfunke - Magische Gute-Nacht-Geschichten
+    const deepLink = `nara://invite/${invite.invite_code}`;
+    const message = `🌙 Nara - Magische Gute-Nacht-Geschichten
 
 Ich lade dich ein, gemeinsam Geschichten für unsere Kinder zu erstellen!
 
 Dein Einladungscode: ${invite.invite_code}
 
-1. Lade die App "Traumfunke" herunter
+1. Lade die App "Nara" herunter
 2. Registriere dich
 3. Gib den Code ein: ${invite.invite_code}
 
@@ -123,7 +123,7 @@ ${deepLink}`;
     try {
         await Share.share({
             message,
-            title: 'Traumfunke - Familieneinladung',
+            title: 'Nara - Familieneinladung',
         });
         return true;
     } catch (error) {
@@ -200,7 +200,7 @@ export const handleInviteDeepLink = async (url: string, userId: string): Promise
         return await acceptInvite(userId, inviteCode);
     }
 
-    // Also check for path pattern traumfunke://invite/CODE
+    // Also check for path pattern nara://invite/CODE
     if (parsed.path?.startsWith('invite/')) {
         const inviteCode = parsed.path.replace('invite/', '');
         return await acceptInvite(userId, inviteCode);

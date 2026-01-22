@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "traumfunke",
-    "slug": "traumfunke",
+    "name": "Nara",
+    "slug": "nara",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "traumfunke",
+    "scheme": "nara",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.stibe88sorganization.traumfunke",
+      "bundleIdentifier": "com.stibe88sorganization.nara",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -23,7 +23,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.stibe88sorganization.traumfunke"
+      "package": "com.stibe88sorganization.nara"
     },
     "splash": {
       "image": "./assets/images/splash-icon.png",

@@ -49,17 +49,17 @@
         "inviteFailed": "Einladung konnte nicht erstellt werden."
     },
     "generating": {
-        "pending": "Vorbereitung...",
-        "queued": "In der Warteschlange...",
-        "processing": "Wird verarbeitet...",
-        "generatingText": "Geschichte wird geschrieben...",
-        "generatingImages": "Bilder werden erstellt...",
-        "renderingClips": "Videos werden gerendert...",
+        "pending": "Wird vorbereitet...",
+        "queued": "Wartet auf den Zauberer...",
+        "processing": "Zaubertrank wird gemischt...",
+        "generatingText": "Die Zauberfeder schreibt... ✨",
+        "generatingImages": "Bilder werden gemalt... 🎨",
+        "renderingClips": "Videos werden gezaubert...",
         "finished": "Fertig!",
-        "failed": "Fehler aufgetreten",
-        "loadingStory": "Geschichte wird geladen...",
+        "failed": "Oh nein, der Zauber hat nicht geklappt",
+        "loadingStory": "Buch wird aufgeschlagen...",
         "goHome": "Zur Startseite",
-        "backgroundInfo": "Du kannst die App schließen. Wir benachrichtigen dich, wenn die Geschichte fertig ist."
+        "backgroundInfo": "Du kannst die App schließen. Wir rufen dich, wenn das Abenteuer bereit ist."
     },
     "tabs": {
         "home": "Start",
@@ -68,7 +68,7 @@
         "settings": "Einstellungen"
     },
     "home": {
-        "welcome": "Willkommen bei Traumfunke",
+        "welcome": "Willkommen bei Nara",
         "greeting": "Guten Abend! 🌙",
         "subtitle": "Zeit für eine Gute-Nacht-Geschichte",
         "createStory": "Geschichte erstellen",
@@ -223,7 +223,7 @@
         "notificationsDisabled": "Deaktiviert",
         "language": "Sprache",
         "selectLanguage": "Sprache auswählen",
-        "about": "Über Traumfunke",
+        "about": "Über Nara",
         "version": "Version",
         "logout": "Abmelden",
         "logoutConfirm": "Möchtest du dich wirklich abmelden?",
@@ -283,10 +283,10 @@
         "privacyNote": "Mit der Registrierung akzeptierst du unsere Datenschutzrichtlinie und Nutzungsbedingungen."
     },
     "notifications": {
-        "storyReady": "Deine Geschichte ist fertig!",
-        "storyReadyBody": "{{title}} wartet auf dich.",
-        "enableTitle": "Benachrichtigungen aktivieren?",
-        "enableMessage": "Wir benachrichtigen dich, wenn deine Geschichte fertig ist."
+        "storyReady": "Dein neues Abenteuer ist da! ✨",
+        "storyReadyBody": "Komm schnell, \"{{title}}\" wartet schon auf dich.",
+        "enableTitle": "Dürfen wir dich rufen?",
+        "enableMessage": "Wir geben Bescheid, wenn das Abenteuer beginnt."
     },
     "subscription": {
         "title": "Abo & Münzen",

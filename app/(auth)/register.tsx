@@ -1,19 +1,21 @@
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { Colors } from '@/constants/theme';
+import { useAuth } from '@/context/auth';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import useI18n from '@/hooks/useI18n';
+import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-    View,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    StyleSheet,
+    Alert,
     KeyboardAvoidingView,
     Platform,
-    ActivityIndicator,
-    Alert,
     ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
-import { Link, useRouter } from 'expo-router';
-import { useAuth } from '@/context/auth';
-import useI18n from '@/hooks/useI18n';
 
 export default function RegisterScreen() {
     const [email, setEmail] = useState('');
@@ -23,6 +25,8 @@ export default function RegisterScreen() {
     const { signUp } = useAuth();
     const router = useRouter();
     const { t } = useI18n();
+    const colorScheme = useColorScheme();
+    const theme = Colors[colorScheme ?? 'light'];
 
     const handleRegister = async () => {
         if (!email || !password || !confirmPassword) {
@@ -57,93 +61,75 @@ export default function RegisterScreen() {
 
     return (
         <KeyboardAvoidingView
-            style={styles.container}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
+            style={[styles.container, { backgroundColor: theme.background }]}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
-                keyboardShouldPersistTaps="handled"
-            >
-                <View style={styles.content}>
-                    {/* Header Section */}
-                    <View style={styles.header}>
-                        <Text style={styles.emoji}>✨</Text>
-                        <Text style={styles.title}>{t('auth.createAccount')}</Text>
-                        <Text style={styles.subtitle}>
-                            {t('auth.createAccountSubtitle')}
-                        </Text>
-                    </View>
-
-                    {/* Form Section */}
-                    <View style={styles.form}>
-                        <View style={styles.inputContainer}>
-                            <Text style={styles.label}>{t('auth.email')}</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="deine@email.de"
-                                placeholderTextColor="#8B7FA8"
-                                value={email}
-                                onChangeText={setEmail}
-                                autoCapitalize="none"
-                                keyboardType="email-address"
-                                autoComplete="email"
-                            />
-                        </View>
-
-                        <View style={styles.inputContainer}>
-                            <Text style={styles.label}>{t('auth.password')}</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder={t('auth.passwordPlaceholder')}
-                                placeholderTextColor="#8B7FA8"
-                                value={password}
-                                onChangeText={setPassword}
-                                secureTextEntry
-                                autoComplete="new-password"
-                            />
-                        </View>
-
-                        <View style={styles.inputContainer}>
-                            <Text style={styles.label}>{t('auth.confirmPassword')}</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder={t('auth.confirmPasswordPlaceholder')}
-                                placeholderTextColor="#8B7FA8"
-                                value={confirmPassword}
-                                onChangeText={setConfirmPassword}
-                                secureTextEntry
-                                autoComplete="new-password"
-                            />
-                        </View>
-
-                        <TouchableOpacity
-                            style={styles.registerButton}
-                            onPress={handleRegister}
-                            disabled={isLoading}
-                        >
-                            {isLoading ? (
-                                <ActivityIndicator color="#FFFFFF" />
-                            ) : (
-                                <Text style={styles.registerButtonText}>{t('auth.registerButton')}</Text>
-                            )}
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Login Link */}
-                    <View style={styles.loginContainer}>
-                        <Text style={styles.loginText}>{t('auth.hasAccount')} </Text>
-                        <Link href="/(auth)/login" asChild>
-                            <TouchableOpacity>
-                                <Text style={styles.loginLink}>{t('auth.loginNow')}</Text>
-                            </TouchableOpacity>
-                        </Link>
-                    </View>
-
-                    {/* Privacy Note */}
-                    <Text style={styles.privacyText}>
-                        {t('auth.privacyNote')}
+                keyboardShouldPersistTaps="handled">
+                <View style={styles.header}>
+                    <Text style={styles.emoji}>✨</Text>
+                    <Text style={[styles.title, { color: theme.text }]}>
+                        {t('auth.createAccount')}
+                    </Text>
+                    <Text style={[styles.subtitle, { color: theme.primary }]}>
+                        {t('auth.createAccountSubtitle')}
                     </Text>
                 </View>
+
+                <Card style={styles.card}>
+                    <Input
+                        label={t('auth.email')}
+                        placeholder="mamapapa@email.com"
+                        value={email}
+                        onChangeText={setEmail}
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                        autoComplete="email"
+                    />
+
+                    <Input
+                        label={t('auth.password')}
+                        placeholder={t('auth.passwordPlaceholder')}
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry
+                        autoComplete="new-password"
+                    />
+
+                    <Input
+                        label={t('auth.confirmPassword')}
+                        placeholder={t('auth.confirmPasswordPlaceholder')}
+                        value={confirmPassword}
+                        onChangeText={setConfirmPassword}
+                        secureTextEntry
+                        autoComplete="new-password"
+                    />
+
+                    <Button
+                        title={t('auth.registerButton')}
+                        onPress={handleRegister}
+                        isLoading={isLoading}
+                        style={styles.registerButton}
+                    />
+                </Card>
+
+                <View style={styles.footer}>
+                    <Text style={[styles.footerText, { color: theme.icon }]}>
+                        {t('auth.hasAccount')}{' '}
+                    </Text>
+                    <Link href="/(auth)/login" asChild>
+                        <Button
+                            title={t('auth.loginNow')}
+                            onPress={() => { }}
+                            variant="ghost"
+                            style={styles.loginButton}
+                        />
+                    </Link>
+                </View>
+
+                <Text style={[styles.privacyText, { color: theme.icon }]}>
+                    {t('auth.privacyNote')}
+                </Text>
             </ScrollView>
         </KeyboardAvoidingView>
     );
@@ -152,94 +138,58 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#1A1625',
     },
     scrollContent: {
         flexGrow: 1,
-    },
-    content: {
-        flex: 1,
-        paddingHorizontal: 24,
-        paddingVertical: 48,
+        padding: 24,
         justifyContent: 'center',
     },
     header: {
         alignItems: 'center',
-        marginBottom: 40,
+        marginBottom: 32,
     },
     emoji: {
-        fontSize: 56,
+        fontSize: 48,
         marginBottom: 16,
     },
     title: {
         fontSize: 28,
-        fontWeight: 'bold',
-        color: '#F5F3FF',
+        fontWeight: '800',
         marginBottom: 8,
+        letterSpacing: -0.5,
     },
     subtitle: {
-        fontSize: 15,
-        color: '#A78BFA',
-        textAlign: 'center',
-    },
-    form: {
-        gap: 16,
-    },
-    inputContainer: {
-        gap: 8,
-    },
-    label: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#E9E3F5',
-        marginLeft: 4,
-    },
-    input: {
-        backgroundColor: '#2D2640',
-        borderRadius: 12,
-        padding: 16,
         fontSize: 16,
-        color: '#F5F3FF',
-        borderWidth: 1,
-        borderColor: '#4C4270',
+        textAlign: 'center',
+        fontWeight: '500',
+    },
+    card: {
+        marginBottom: 24,
+        padding: 24,
+        borderRadius: 24,
     },
     registerButton: {
-        backgroundColor: '#7C3AED',
-        borderRadius: 12,
-        padding: 16,
-        alignItems: 'center',
         marginTop: 8,
-        shadowColor: '#7C3AED',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 4,
     },
-    registerButtonText: {
-        color: '#FFFFFF',
-        fontSize: 18,
-        fontWeight: '600',
-    },
-    loginContainer: {
+    footer: {
         flexDirection: 'row',
         justifyContent: 'center',
-        marginTop: 24,
+        alignItems: 'center',
     },
-    loginText: {
-        color: '#8B7FA8',
+    footerText: {
         fontSize: 15,
     },
-    loginLink: {
-        color: '#A78BFA',
-        fontSize: 15,
-        fontWeight: '600',
+    loginButton: {
+        paddingVertical: 0,
+        paddingHorizontal: 4,
+        minWidth: 0,
+        height: 32,
     },
     privacyText: {
-        color: '#6B5B8A',
         fontSize: 12,
         textAlign: 'center',
         marginTop: 24,
-        paddingHorizontal: 24,
-        lineHeight: 18,
+        paddingHorizontal: 16,
+        opacity: 0.7,
     },
 });

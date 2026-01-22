@@ -67,7 +67,7 @@ export async function registerForPushNotifications(userId: string): Promise<stri
         // Android-specific channel setup
         if (Platform.OS === 'android') {
             await Notifications.setNotificationChannelAsync('default', {
-                name: 'Traumfunke',
+                name: 'Nara',
                 importance: Notifications.AndroidImportance.MAX,
                 vibrationPattern: [0, 250, 250, 250],
                 lightColor: '#7C3AED',

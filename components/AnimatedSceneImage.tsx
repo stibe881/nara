@@ -1,11 +1,11 @@
+import { Image } from 'expo-image';
 import React, { useEffect, useRef } from 'react';
 import {
-    View,
-    Image,
-    StyleSheet,
     Animated,
-    Easing,
     Dimensions,
+    Easing,
+    StyleSheet,
+    View,
 } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -142,63 +142,17 @@ export default function AnimatedSceneImage({
         };
     }, [imageUrl, duration]);
 
+    // Simplified static view to debug quality issues
     return (
         <View style={styles.container}>
-            {/* Main image with Ken-Burns effect */}
-            <Animated.View
-                style={[
-                    styles.imageWrapper,
-                    {
-                        transform: [
-                            { scale: scaleAnim },
-                            { translateX: translateXAnim },
-                            { translateY: translateYAnim },
-                        ],
-                    },
-                ]}
-            >
-                <Image
-                    source={{ uri: imageUrl }}
-                    style={styles.image}
-                    resizeMode="cover"
-                />
-            </Animated.View>
-
-            {/* Particle overlay */}
-            <View style={styles.particleContainer} pointerEvents="none">
-                <Animated.View
-                    style={[
-                        styles.particle,
-                        {
-                            left: '20%',
-                            opacity: particle1Opacity,
-                            transform: [{ translateY: particle1Y }],
-                        },
-                    ]}
-                />
-                <Animated.View
-                    style={[
-                        styles.particle,
-                        {
-                            left: '50%',
-                            opacity: particle2Opacity,
-                            transform: [{ translateY: particle2Y }],
-                        },
-                    ]}
-                />
-                <Animated.View
-                    style={[
-                        styles.particle,
-                        {
-                            left: '75%',
-                            opacity: particle3Opacity,
-                            transform: [{ translateY: particle3Y }],
-                        },
-                    ]}
-                />
-            </View>
-
-            {/* Soft gradient vignette */}
+            <Image
+                source={{ uri: imageUrl }}
+                style={styles.image}
+                contentFit="cover"
+                transition={500}
+                cachePolicy="memory-disk"
+            />
+            {/* Keeping vignette for style, but removing particles/animation */}
             <View style={styles.vignette} pointerEvents="none" />
         </View>
     );
