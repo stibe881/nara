@@ -123,10 +123,19 @@ export default function SubscriptionScreen() {
                     <TouchableOpacity
                         style={styles.packageCard}
                         onPress={() => {
+                            console.log('DEBUG: Available packages:', JSON.stringify(offerings?.availablePackages?.map((p: any) => p.product.identifier)));
+                            console.log('DEBUG: Looking for:', PRODUCT_IDS.COINS_5);
                             const pkg = offerings?.availablePackages?.find(
                                 (p: any) => p.product.identifier === PRODUCT_IDS.COINS_5
                             );
-                            if (pkg) handlePurchase(pkg);
+                            if (pkg) {
+                                handlePurchase(pkg);
+                            } else {
+                                Alert.alert(
+                                    'Produkt nicht verfügbar',
+                                    `Das Paket "${PRODUCT_IDS.COINS_5}" wurde nicht gefunden. Verfügbare Pakete: ${offerings?.availablePackages?.map((p: any) => p.product.identifier).join(', ') || 'Keine'}`
+                                );
+                            }
                         }}
                         disabled={isPurchasing}
                     >
@@ -142,10 +151,19 @@ export default function SubscriptionScreen() {
                     <TouchableOpacity
                         style={styles.packageCard}
                         onPress={() => {
+                            console.log('DEBUG: Available packages:', JSON.stringify(offerings?.availablePackages?.map((p: any) => p.product.identifier)));
+                            console.log('DEBUG: Looking for:', PRODUCT_IDS.COINS_1);
                             const pkg = offerings?.availablePackages?.find(
                                 (p: any) => p.product.identifier === PRODUCT_IDS.COINS_1
                             );
-                            if (pkg) handlePurchase(pkg);
+                            if (pkg) {
+                                handlePurchase(pkg);
+                            } else {
+                                Alert.alert(
+                                    'Produkt nicht verfügbar',
+                                    `Das Paket "${PRODUCT_IDS.COINS_1}" wurde nicht gefunden. Verfügbare Pakete: ${offerings?.availablePackages?.map((p: any) => p.product.identifier).join(', ') || 'Keine'}`
+                                );
+                            }
                         }}
                         disabled={isPurchasing}
                     >
