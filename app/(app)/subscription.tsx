@@ -123,8 +123,6 @@ export default function SubscriptionScreen() {
                     <TouchableOpacity
                         style={styles.packageCard}
                         onPress={() => {
-                            console.log('DEBUG: Available packages:', JSON.stringify(offerings?.availablePackages?.map((p: any) => p.product.identifier)));
-                            console.log('DEBUG: Looking for:', PRODUCT_IDS.COINS_5);
                             const pkg = offerings?.availablePackages?.find(
                                 (p: any) => p.product.identifier === PRODUCT_IDS.COINS_5
                             );
@@ -132,8 +130,8 @@ export default function SubscriptionScreen() {
                                 handlePurchase(pkg);
                             } else {
                                 Alert.alert(
-                                    'Produkt nicht verfügbar',
-                                    `Das Paket "${PRODUCT_IDS.COINS_5}" wurde nicht gefunden. Verfügbare Pakete: ${offerings?.availablePackages?.map((p: any) => p.product.identifier).join(', ') || 'Keine'}`
+                                    t('common.error'),
+                                    t('subscription.productUnavailable')
                                 );
                             }
                         }}
@@ -143,7 +141,11 @@ export default function SubscriptionScreen() {
                             <Text style={styles.coinPackageEmoji}>🪙🪙🪙🪙🪙</Text>
                             <View>
                                 <Text style={styles.packageTitle}>{t('subscription.fiveCoins')}</Text>
-                                <Text style={styles.packagePrice}>{t('subscription.fiveCoinsPrice')}</Text>
+                                <Text style={styles.packagePrice}>
+                                    {offerings?.availablePackages?.find(
+                                        (p: any) => p.product.identifier === PRODUCT_IDS.COINS_5
+                                    )?.product.priceString || t('subscription.fiveCoinsPrice')}
+                                </Text>
                             </View>
                         </View>
                     </TouchableOpacity>
@@ -151,8 +153,6 @@ export default function SubscriptionScreen() {
                     <TouchableOpacity
                         style={styles.packageCard}
                         onPress={() => {
-                            console.log('DEBUG: Available packages:', JSON.stringify(offerings?.availablePackages?.map((p: any) => p.product.identifier)));
-                            console.log('DEBUG: Looking for:', PRODUCT_IDS.COINS_1);
                             const pkg = offerings?.availablePackages?.find(
                                 (p: any) => p.product.identifier === PRODUCT_IDS.COINS_1
                             );
@@ -160,8 +160,8 @@ export default function SubscriptionScreen() {
                                 handlePurchase(pkg);
                             } else {
                                 Alert.alert(
-                                    'Produkt nicht verfügbar',
-                                    `Das Paket "${PRODUCT_IDS.COINS_1}" wurde nicht gefunden. Verfügbare Pakete: ${offerings?.availablePackages?.map((p: any) => p.product.identifier).join(', ') || 'Keine'}`
+                                    t('common.error'),
+                                    t('subscription.productUnavailable')
                                 );
                             }
                         }}
@@ -170,8 +170,12 @@ export default function SubscriptionScreen() {
                         <View style={styles.coinPackage}>
                             <Text style={styles.coinPackageEmoji}>🪙</Text>
                             <View>
-                                <Text style={styles.packageTitle}>1 Coin</Text>
-                                <Text style={styles.packagePrice}>€2.00</Text>
+                                <Text style={styles.packageTitle}>1 {t('subscription.coins').slice(0, -1)}</Text>
+                                <Text style={styles.packagePrice}>
+                                    {offerings?.availablePackages?.find(
+                                        (p: any) => p.product.identifier === PRODUCT_IDS.COINS_1
+                                    )?.product.priceString || '...'}
+                                </Text>
                             </View>
                         </View>
                     </TouchableOpacity>

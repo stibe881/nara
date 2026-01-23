@@ -46,7 +46,8 @@
         "childDeleteFailed": "Das Kind konnte nicht gelöscht werden.",
         "accountDeleteFailed": "Das Konto konnte nicht gelöscht werden.",
         "noCoins": "Du hast nicht genug Münzen.",
-        "inviteFailed": "Einladung konnte nicht erstellt werden."
+        "inviteFailed": "Einladung konnte nicht erstellt werden.",
+        "productUnavailable": "Produkt momentan nicht verfügbar."
     },
     "generating": {
         "pending": "Wird vorbereitet...",
@@ -306,7 +307,7 @@
         "buyCoins": "🪙 Münzen kaufen",
         "payAsYouGo": "Bezahle nur für das was du brauchst",
         "fiveCoins": "5 Münzen",
-        "fiveCoinsPrice": "CHF 9.-",
+        "fiveCoinsPrice": "Preis laden...",
         "restorePurchases": "Käufe wiederherstellen",
         "processing": "Wird verarbeitet...",
         "purchaseSuccess": "Kauf erfolgreich abgeschlossen!",

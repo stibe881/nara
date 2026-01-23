@@ -46,7 +46,8 @@
         "childDeleteFailed": "Child could not be deleted.",
         "accountDeleteFailed": "Account could not be deleted.",
         "noCoins": "You don't have enough coins.",
-        "inviteFailed": "Invitation could not be created."
+        "inviteFailed": "Invitation could not be created.",
+        "productUnavailable": "Product currently unavailable."
     },
     "generating": {
         "pending": "Preparing...",
@@ -303,7 +304,7 @@
         "buyCoins": "🪙 Buy Coins",
         "payAsYouGo": "Pay only for what you need",
         "fiveCoins": "5 Coins",
-        "fiveCoinsPrice": "CHF 9.-",
+        "fiveCoinsPrice": "Loading price...",
         "restorePurchases": "Restore Purchases",
         "processing": "Processing...",
         "purchaseSuccess": "Purchase completed successfully!",
