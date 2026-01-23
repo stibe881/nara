@@ -88,8 +88,18 @@ export default function WizardLengthScreen() {
                 );
             }
 
-            // Call Edge Function (Fire & Forget)
-            supabase.functions.invoke('create-story', { body: { request_id: request.id } });
+            // Call Edge Function
+            console.log('Invoking create-story with request_id:', request.id);
+            const { error: funcError } = await supabase.functions.invoke('create-story', {
+                body: { request_id: request.id }
+            });
+
+            if (funcError) {
+                console.error('Edge Function Error:', funcError);
+                Alert.alert('Fehler', 'Fehler beim Starten der Generierung: ' + (funcError.message || JSON.stringify(funcError)));
+            } else {
+                console.log('Edge Function invoked successfully');
+            }
 
             setNewPendingRequestId(request.id);
             reset();

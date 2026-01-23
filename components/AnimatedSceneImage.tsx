@@ -153,7 +153,7 @@ export default function AnimatedSceneImage({
                 cachePolicy="memory-disk"
             />
             {/* Keeping vignette for style, but removing particles/animation */}
-            <View style={styles.vignette} pointerEvents="none" />
+
         </View>
     );
 }

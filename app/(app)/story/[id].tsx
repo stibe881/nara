@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     body: { marginBottom: 32 },
     block: { marginBottom: 24 },
     paragraph: { fontSize: 20, lineHeight: 32 }, // Larger reading font
-    sceneFrame: { height: 250, borderRadius: 24, overflow: 'hidden', marginBottom: 24, backgroundColor: '#E2E8F0' },
+    sceneFrame: { height: 250, borderRadius: 24, overflow: 'hidden', marginBottom: 24, backgroundColor: '#1A1625' },
     moralBox: { padding: 24, borderRadius: 16, borderLeftWidth: 4, marginBottom: 40 },
     moralTitle: { fontSize: 14, fontWeight: '700', marginBottom: 8, textTransform: 'uppercase' },
     moralText: { fontSize: 18, fontStyle: 'italic', lineHeight: 28 },
