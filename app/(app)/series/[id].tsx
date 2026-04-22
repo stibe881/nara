@@ -375,40 +375,11 @@ export default function SeriesDetailScreen() {
                     </View>
                 </View>
 
-                {/* Moral History - Hide in selection mode? Or disable interaction? 
-                    Keep it but maybe disable interaction to avoid confusion. For now leave as is.
-                */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>📜 Moral-Verlauf</Text>
-                    {/* ... (keep existing moral history) ... */}
-                    {episodes.length === 0 ? (
-                        <Text style={styles.emptyText}>Noch keine Folgen erstellt</Text>
-                    ) : (
-                        <View style={styles.moralHistory}>
-                            {episodes.map((ep) => (
-                                <TouchableOpacity
-                                    key={ep.id}
-                                    style={[styles.moralItem, { opacity: isSelectionMode ? 0.5 : 1 }]}
-                                    disabled={isSelectionMode}
-                                    onPress={() => {
-                                        setHighlightedEpisodeId(ep.id);
-                                        // ... existing scroll logic ...
-                                    }}
-                                >
-                                    <Text style={styles.moralEpisode}>Folge {ep.episode_number}</Text>
-                                    <Text style={styles.moralText}>{getMoralText(ep.moral_key)}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    )}
-                </View>
-
-                {/* Episodes List */}
+                {/* Episodes List - FIRST */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>📚 Folgen</Text>
                     {episodes.length === 0 ? (
                         <View style={styles.emptyState}>
-                            {/* ... empty state ... */}
                             <Text style={styles.emptyIcon}>🎬</Text>
                             <Text style={styles.emptyTitle}>Keine Folgen</Text>
                             <Text style={styles.emptySubtitle}>Start...</Text>
@@ -436,6 +407,30 @@ export default function SeriesDetailScreen() {
                                     }}
                                     onDelete={() => handleDeleteEpisode(ep)}
                                 />
+                            ))}
+                        </View>
+                    )}
+                </View>
+
+                {/* Moral-Verlauf - BELOW episodes */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>📜 Moral-Verlauf</Text>
+                    {episodes.length === 0 ? (
+                        <Text style={styles.emptyText}>Noch keine Folgen erstellt</Text>
+                    ) : (
+                        <View style={styles.moralHistory}>
+                            {episodes.map((ep) => (
+                                <TouchableOpacity
+                                    key={ep.id}
+                                    style={[styles.moralItem, { opacity: isSelectionMode ? 0.5 : 1 }]}
+                                    disabled={isSelectionMode}
+                                    onPress={() => {
+                                        setHighlightedEpisodeId(ep.id);
+                                    }}
+                                >
+                                    <Text style={styles.moralEpisode}>Folge {ep.episode_number}</Text>
+                                    <Text style={styles.moralText}>{getMoralText(ep.moral_key)}</Text>
+                                </TouchableOpacity>
                             ))}
                         </View>
                     )}

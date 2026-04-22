@@ -67,43 +67,139 @@ export default function WizardLengthScreen() {
                 return;
             }
 
-            // 3. Create Story Request
-            // Simulating connection for UI demo
-            const { data: request, error } = await supabase.from('story_requests').insert({
-                user_id: user?.id,
-                status: 'queued',
-                category_id: selectedCategoryId,
-                location: location || null,
-                moral_id: selectedMoralId,
-                length,
-                notify_on_complete: true,
-                generate_images: generateImages,
-            }).select().single();
+            if (storyMode === 'series') {
+                // --- SERIES FLOW ---
+                // 3a. Create Series entry
+                const { data: series, error: seriesError } = await supabase.from('series').insert({
+                    user_id: user?.id,
+                    title: seriesConfig?.title || null,
+                    child_ids: selectedChildIds,
+                    category: selectedCategoryId ? { id: selectedCategoryId } : null,
+                    location_text: location || null,
+                    chosen_character_ids: selectedSideCharacterIds.length > 0 ? selectedSideCharacterIds : null,
+                    chosen_category_character_ids: selectedCategoryCharacterIds.length > 0 ? selectedCategoryCharacterIds : null,
+                    mode: seriesConfig?.mode || 'unlimited',
+                    planned_episodes: seriesConfig?.plannedEpisodes || null,
+                    is_finished: false,
+                    default_moral_key: selectedMoralId || null,
+                    default_length: length,
+                }).select().single();
 
-            if (error) throw error;
+                if (seriesError) throw seriesError;
 
-            if (selectedChildIds.length > 0) {
-                await supabase.from('story_request_children').insert(
-                    selectedChildIds.map((childId) => ({ story_request_id: request.id, child_id: childId }))
-                );
-            }
+                // 3b. Create story_request for episode 1 (same pattern as new-episode.tsx)
+                const { data: request, error: requestError } = await supabase.from('story_requests').insert({
+                    user_id: user?.id,
+                    status: 'queued',
+                    length,
+                    is_episode: true,
+                    series_id: series.id,
+                    episode_number: 1,
+                    category_id: selectedCategoryId,
+                    location: location || null,
+                    moral_id: selectedMoralId,
+                    notify_on_complete: true,
+                    generate_images: generateImages,
+                }).select().single();
 
-            // Call Edge Function
-            console.log('Invoking create-story with request_id:', request.id);
-            const { error: funcError } = await supabase.functions.invoke('create-story', {
-                body: { request_id: request.id }
-            });
+                if (requestError) throw requestError;
 
-            if (funcError) {
-                console.error('Edge Function Error:', funcError);
-                Alert.alert('Fehler', 'Fehler beim Starten der Generierung: ' + (funcError.message || JSON.stringify(funcError)));
+                if (selectedChildIds.length > 0) {
+                    await supabase.from('story_request_children').insert(
+                        selectedChildIds.map((childId) => ({ story_request_id: request.id, child_id: childId }))
+                    );
+                }
+
+                const characterInserts = [
+                    ...selectedCategoryCharacterIds.map((id) => ({
+                        story_request_id: request.id,
+                        category_character_id: id,
+                        side_character_id: null,
+                    })),
+                    ...selectedSideCharacterIds.map((id) => ({
+                        story_request_id: request.id,
+                        category_character_id: null,
+                        side_character_id: id,
+                    })),
+                ];
+                if (characterInserts.length > 0) {
+                    await supabase.from('story_request_characters').insert(characterInserts);
+                }
+
+                // 3c. Call generate-series-episode (same as new-episode.tsx)
+                console.log('Invoking generate-series-episode for series:', series.id);
+                supabase.functions.invoke('generate-series-episode', {
+                    body: {
+                        series_id: series.id,
+                        moral_key: selectedMoralId || 'none',
+                        length_setting: length,
+                        make_final: false,
+                        notify_on_complete: true,
+                        request_id: request.id,
+                    },
+                }).catch(err => {
+                    if (err?.name !== 'FunctionsFetchError') {
+                        console.error('Background generation error:', err);
+                    }
+                });
+
+                setNewPendingRequestId(request.id);
+                reset();
+                router.replace(`/(app)/series/${series.id}`);
+
             } else {
-                console.log('Edge Function invoked successfully');
-            }
+                // --- SINGLE STORY FLOW ---
+                const { data: request, error } = await supabase.from('story_requests').insert({
+                    user_id: user?.id,
+                    status: 'queued',
+                    category_id: selectedCategoryId,
+                    location: location || null,
+                    moral_id: selectedMoralId,
+                    length,
+                    notify_on_complete: true,
+                    generate_images: generateImages,
+                }).select().single();
 
-            setNewPendingRequestId(request.id);
-            reset();
-            router.replace('/(app)/(tabs)/home');
+                if (error) throw error;
+
+                if (selectedChildIds.length > 0) {
+                    await supabase.from('story_request_children').insert(
+                        selectedChildIds.map((childId) => ({ story_request_id: request.id, child_id: childId }))
+                    );
+                }
+
+                const characterInserts = [
+                    ...selectedCategoryCharacterIds.map((id) => ({
+                        story_request_id: request.id,
+                        category_character_id: id,
+                        side_character_id: null,
+                    })),
+                    ...selectedSideCharacterIds.map((id) => ({
+                        story_request_id: request.id,
+                        category_character_id: null,
+                        side_character_id: id,
+                    })),
+                ];
+                if (characterInserts.length > 0) {
+                    await supabase.from('story_request_characters').insert(characterInserts);
+                }
+
+                console.log('Invoking create-story with request_id:', request.id);
+                const { error: funcError } = await supabase.functions.invoke('create-story', {
+                    body: { request_id: request.id }
+                });
+
+                if (funcError) {
+                    console.error('Edge Function Error:', funcError);
+                    Alert.alert('Fehler', 'Fehler beim Starten der Generierung: ' + (funcError.message || JSON.stringify(funcError)));
+                } else {
+                    console.log('Edge Function invoked successfully');
+                }
+
+                setNewPendingRequestId(request.id);
+                reset();
+                router.replace('/(app)/(tabs)/home');
+            }
 
         } catch (e) {
             console.error(e);

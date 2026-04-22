@@ -79,6 +79,30 @@ export default function WizardCharactersScreen() {
             <ScrollView contentContainerStyle={styles.content}>
                 <Text style={[styles.instruction, { color: theme.text }]}>Wer soll noch dabei sein?</Text>
 
+                {/* Side Characters Chips - Freunde & Familie FIRST */}
+                {sideCharacters.length > 0 && (
+                    <View style={styles.section}>
+                        <Text style={[styles.sectionTitle, { color: theme.icon }]}>Freunde & Familie</Text>
+                        <View style={styles.chipContainer}>
+                            {sideCharacters.map((char) => {
+                                const isSelected = selectedSideCharacterIds.includes(char.id);
+                                return (
+                                    <TouchableOpacity
+                                        key={char.id}
+                                        style={[
+                                            styles.chip,
+                                            { backgroundColor: isSelected ? theme.primary : theme.surface, borderColor: theme.border, borderWidth: 1 }
+                                        ]}
+                                        onPress={() => toggleSideCharacter(char.id)}
+                                    >
+                                        <Text style={[styles.chipText, { color: isSelected ? '#FFF' : theme.text }]}>{char.name}</Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
+                    </View>
+                )}
+
                 {/* Category Characters Grid */}
                 {categoryCharacters.length > 0 && (
                     <View style={styles.section}>
@@ -97,30 +121,6 @@ export default function WizardCharactersScreen() {
                                                 </View>
                                             )}
                                         </Card>
-                                    </TouchableOpacity>
-                                );
-                            })}
-                        </View>
-                    </View>
-                )}
-
-                {/* Side Characters Chips */}
-                {sideCharacters.length > 0 && (
-                    <View style={styles.section}>
-                        <Text style={[styles.sectionTitle, { color: theme.icon }]}>Freunde & Familie</Text>
-                        <View style={styles.chipContainer}>
-                            {sideCharacters.map((char) => {
-                                const isSelected = selectedSideCharacterIds.includes(char.id);
-                                return (
-                                    <TouchableOpacity
-                                        key={char.id}
-                                        style={[
-                                            styles.chip,
-                                            { backgroundColor: isSelected ? theme.primary : theme.surface, borderColor: theme.border, borderWidth: 1 }
-                                        ]}
-                                        onPress={() => toggleSideCharacter(char.id)}
-                                    >
-                                        <Text style={[styles.chipText, { color: isSelected ? '#FFF' : theme.text }]}>{char.name}</Text>
                                     </TouchableOpacity>
                                 );
                             })}
