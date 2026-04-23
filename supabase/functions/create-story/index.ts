@@ -192,7 +192,7 @@ Erstelle eine Gute-Nacht-Geschichte mit folgenden Vorgaben:
 ${extraCharacterLines.join("\n")}
 **Kategorie:** ${request.category?.name || "Frei"}
 ${request.location ? `**Ort:** ${request.location}` : ""}
-${request.moral?.text && request.moral.slug !== "keine" ? `**Moral:** ${request.moral.text}` : ""}
+${request.moral?.text && request.moral.slug !== "none" ? `**Moral:** ${request.moral.text}` : ""}
 
 ${lengthInstructions[request.length as keyof typeof lengthInstructions]}
 ${accessibilityContext}
@@ -228,7 +228,7 @@ WICHTIG für Verwandtschaftsbeziehungen:
     { "text": "Zweiter Absatz..." },
     { "text": "Dritter Absatz mit neuer Szene...", "scene_marker": true, "image_prompt": "magical forest at twilight, fireflies, dreamy atmosphere, Pixar style" }
   ],
-  "moral_summary": "Kurze Zusammenfassung der Moral in einem Satz"
+  "moral_summary": "Kurze Zusammenfassung der Botschaft oder Moral der Geschichte in einem einzigen Satz (IMMER befüllen, auch wenn keine explizite Moral vorgegeben wurde)"
 }
 
 Regeln fuer image_prompt:

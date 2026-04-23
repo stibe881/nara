@@ -35,16 +35,30 @@ export default function StoryViewerScreen() {
     }, [id]);
 
     const loadStory = async () => {
-        const { data } = await supabase.from('stories').select('*, content').eq('id', id).single();
+        const { data } = await supabase
+            .from('stories')
+            .select('*, content, story_request:request_id(moral:moral_id(text, slug))')
+            .eq('id', id)
+            .single();
         if (data) setStory(data);
         const { data: scenesData } = await supabase.from('story_scenes').select('*').eq('story_id', id).order('scene_index');
         if (scenesData) setScenes(scenesData);
         setIsLoading(false);
     };
 
+    // Moral aus content (GPT-generiert) oder aus dem verknüpften Moral-Eintrag als Fallback
+    const getMoralText = (s: any): string | null => {
+        if (s?.content?.moral_summary) return s.content.moral_summary;
+        const moralSlug = s?.story_request?.moral?.slug;
+        const moralText = s?.story_request?.moral?.text;
+        if (moralText && moralSlug && moralSlug !== 'none') return moralText;
+        return null;
+    };
+
     const handleShare = async () => {
         try {
-            const message = `${story.title}\n\n${story.content.moral_summary || ''}\n\nLies die ganze Geschichte auf Nara!`;
+            const moralText = getMoralText(story);
+            const message = `${story.title}\n\n${moralText ? `💡 ${moralText}\n\n` : ''}Lies die ganze Geschichte auf Nara!`;
             await Share.share({
                 message,
                 title: story.title,
@@ -73,9 +87,7 @@ export default function StoryViewerScreen() {
                 <body>
                     <h1>${story.title}</h1>
                     ${story.content.story.map((p: any) => `<p>${p.text}</p>`).join('')}
-                    <div class="moral">
-                        <strong>Die Moral:</strong> ${story.content.moral_summary}
-                    </div>
+                    ${getMoralText(story) ? `<div class="moral"><strong>💡 Die Moral:</strong> ${getMoralText(story)}</div>` : ''}
                 </body>
                 </html>
             `;
@@ -133,10 +145,12 @@ export default function StoryViewerScreen() {
                         })}
                     </View>
 
-                    <View style={[styles.moralBox, { backgroundColor: '#FFF9E6', borderLeftColor: theme.secondary }]}>
-                        <Text style={[styles.moralTitle, { color: theme.secondary }]}>Die Moral</Text>
-                        <Text style={[styles.moralText, { color: '#444' }]}>{story.content.moral_summary}</Text>
-                    </View>
+                    {!!getMoralText(story) && (
+                        <View style={[styles.moralBox, { backgroundColor: '#FFF9E6', borderLeftColor: theme.secondary }]}>
+                            <Text style={[styles.moralTitle, { color: theme.secondary }]}>💡 Die Moral</Text>
+                            <Text style={[styles.moralText, { color: '#444' }]}>{getMoralText(story)}</Text>
+                        </View>
+                    )}
 
                     <View style={{ height: 100 }} />
                 </ScrollView>
